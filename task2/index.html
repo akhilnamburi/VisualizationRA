@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"/>
+  		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+      <script src="papaparse.min.js"></script>
+      <script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
+      <link rel="stylesheet" href="https://cdn.datatables.net/1.10.21/css/jquery.dataTables.min.css"/>
+  		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+  		<script type="text/javascript" src="script.js"></script>
+	</head>
+	<body>
+		<div class="container">
+      <div class="row">
+        <div class="col-sm-3"></div>
+   			  <form  style="margin-top: 15px;" class="form-inline">
+            <div class="form-group">
+              <label for="files">Upload a CSV formatted file:</label>
+              <input type="file" id="files"  class="form-control" accept=".csv" required />
+            </div>
+            <div class="form-group">
+             <button type="submit" id="submitFile" class="btn btn-primary">Upload File</button>
+             </div>
+          </form>
+      </div>
+      <div class="row">
+        <table id="table1" class="display" width="100%"></table>
+      </div>
+      <div class="row" id="details" style="display:none;">
+        <p >Total no.of columns present in csv file:  <span id="myText1"></span></p>
+        <p >The columns present in csv file:  <b><span id="myText2"></span></b></p>
+        <p >Total no.of rows present in csv file:  <span id="myText3"></span></p>
+
+      </div>
+  	</div>
+	</body>
+</html>
