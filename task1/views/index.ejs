@@ -34,6 +34,8 @@
       const API_URL = 'http://localhost:3000/';
       $(document).ready(function() {
 
+
+
         $('select').select2();
         $('select').on('change',function(){
           var file = $(this).val();
@@ -42,10 +44,10 @@
             url: API_URL+'readFile/'+file,
             success: (data)=>{
               var note = `
-              <div class="note" style="z-index: 999;">
+              <div class="note" id='`+fileNameShort+`' style="z-index: 999;">
                 <div class='close_note'>X</div>
                 <h3>`+fileNameShort+`</h3>
-                <p>
+                <p style="cursor:text;">
                   `+data+`
                 </p>
               </div>
@@ -53,10 +55,27 @@
               $("#board").append(note);
               $(".note").css('z-index',99).draggable({
                 containment: "#board",
-                grid: [5, 5]
+                grid: [5, 5],
+                cancel: "p"
               });
+
+            /*  var words = $( ".note#"+fileNameShort+" p" ).first().text().split( /\s+/ );
+              var text = words.join( "</span> <span>" );
+              $( ".note#"+fileNameShort+" p").first().html( "<span>" + text + "</span>" );
+              $( document ).on( "click", ".note#"+fileNameShort+" span", function() {
+                $( this ).css( "background-color", "red" );
+              });*/
+
             }
           })
+        });
+
+        $(document).on('drag', '.note', function(){
+          $(this).click();
+        })
+        $(document).on('click', '.note', function(){
+          $(this).siblings().css('z-index', 9);
+          $(this).css('z-index', 99);
         });
 
         $(document).on('click','.note .close_note',function(){
