@@ -51,3 +51,41 @@ div.note .close_note {
   top: 5px;
   cursor: pointer;
 }
+
+.menu-options {
+    list-style: none;
+    padding: 10px 0;
+
+    .menu-option {
+      font-weight: 500;
+      font-size: 14px;
+      padding: 10px 40px 10px 20px;
+      cursor: pointer;
+
+      &:hover {
+        background: rgba(0, 0, 0, 0.2);
+      }
+    }
+  }
+
+  .highlighted-text {
+    background-color: yellow;
+    color: #000;
+  }
+
+  .custom-menu {
+    display: none;
+    position: absolute;
+    z-index: 101;
+    background: #fff;
+    list-style-type: none;
+  }
+
+  .menu-item {
+    cursor: pointer;
+    padding: 0.5rem;
+  }
+
+  .menu-item:hover {
+    background-color: #ADFF2F;
+  }
