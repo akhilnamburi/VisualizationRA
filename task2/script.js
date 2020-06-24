@@ -15,7 +15,9 @@
     });
 
 	function displayHTMLTable(results){
+
 		let data = results.data;
+		console.log(data);
 		let dataprocess=[];
 		let dataHeader =[];
 		dataHeader = data.splice(0,1).toString().split(",");
@@ -51,9 +53,11 @@
     		});
   		});
 
-    	let temp = $('<ul class="list-group menu" style="list-style: none;" id="myList"> </ul>');
+    	//let temp = $('<ul class="list-group menu" style="list-style: none;" id="myList"> </ul>');
+    	let temp = $('<ul class="list-group list-group-flush" id="myList"></ul>');
     	for (let i = 0; i < dataHeader.length; i++) {       
-        	temp.append('<li><a href="#" class="button" >'+dataHeader[i]+'</a></li>');
+        	temp.append('<li class="list-group-item"><div class="custom-control custom-checkbox"><input type="checkbox" value="'+dataHeader[i]+'" name="columnName" class="custom-control-input" id="check'+i+'">'+
+        		'  <label class="custom-control-label" for="check'+i+'">'+ dataHeader[i]+'</label></div></li>');
     	}
     	$('#users').html(temp);
 
@@ -66,69 +70,81 @@
 			}
 			jsonFinalData[dataHeader[i]] = temp;
 		}
+		//generate chart button click
+		$("button").click(function(){
+            const favorite = [];
+            $.each($("input[name='columnName']:checked"), function(){
+                favorite.push($(this).val());
+            });
+            if (favorite.length<3 && favorite.length>0){
+            	if (favorite.length==1){
 
-    	//list on-click event
-	  	let listItems = document.querySelectorAll("ul li");
-	  	listItems.forEach(function(item) {
-			item.onclick = function(e) {
-				//delete the chart initially
-				$('#myChart').remove();
-				let temp1 = $('<div class="col-sm-8" class="graphContainer">');     
-		        temp1.append('<canvas id="myChart" style="display: block; height: 800px; width: 950px;"></canvas>');
-		    	$('#users1').html(temp1);
-		    	let chartData = {};
-			    let count = 1;
-			    
-			    for(let i=0;i<jsonFinalData[this.innerText].length;i++){
-			    	if (chartData[jsonFinalData[this.innerText][i]]){
-			    		chartData[jsonFinalData[this.innerText][i]] = count+1;
-			    	} 
-			    	else{
-			    		chartData[jsonFinalData[this.innerText][i]] = 1;
-			    	}
-			    }
-			    console.log(chartData);
-			    chartData = Object.entries(chartData).sort().reduce( (o,[k,v]) => (o[k]=v,o), {} );
-				if((this.innerText).toLowerCase() == "country" || (this.innerText).toLowerCase() == "state"){
-						alert("oops");
-				}
-				else{
-			    		
-			    	let labelsData = Object.keys(chartData).map(function(key) {
-						return key;
-					});
-					let frequencyData = Object.values(chartData).map(function(value) {
-						return value;
-					});
-			    	let maxValue = Math.max(...frequencyData);
-			    	const ctx = document.getElementById('myChart').getContext('2d');
-			    	let chart = new Chart(ctx, {
-					    // The type of chart we want to create
-					    type: 'horizontalBar',
-					    // The data for our dataset
-					    data:{
-					        labels: labelsData,
-					        datasets: [{
-					            label: 'Frequency',
-					            backgroundColor: 'rgb(255, 99, 132)',
-					            borderColor: 'rgb(255, 99, 132)',
-					            data: frequencyData
-					        }]
-					    },
-					    options: {
-						    scales: {
-						        xAxes: [{
-						            ticks: {
-						                min: 0,
-						                max: maxValue+1
-						            }
+            		$('#myChart').remove();
+					let temp1 = $('<div class="col-sm-8" class="graphContainer">');     
+			        temp1.append('<canvas id="myChart" style="display: block; height: 800px; width: 950px;"></canvas>');
+			    	$('#users1').html(temp1);
+			    	let chartData = {};
+				    let count = 1;
+				    
+				    for(let i=0;i<jsonFinalData[favorite[0]].length;i++){
+				    	if (chartData[jsonFinalData[favorite[0]][i]]){
+				    		chartData[jsonFinalData[favorite[0]][i]] = count+1;
+				    	} 
+				    	else{
+				    		chartData[jsonFinalData[favorite[0]][i]] = 1;
+				    	}
+				    }
+				    
+				    chartData = Object.entries(chartData).sort().reduce( (o,[k,v]) => (o[k]=v,o), {} );
+					if((this.innerText).toLowerCase() == "country" || (this.innerText).toLowerCase() == "state"){
+							alert("oops");
+					}
+					else{
+				    		
+				    	let labelsData = Object.keys(chartData).map(function(key) {
+							return key;
+						});
+						let frequencyData = Object.values(chartData).map(function(value) {
+							return value;
+						});
+				    	let maxValue = Math.max(...frequencyData);
+				    	const ctx = document.getElementById('myChart').getContext('2d');
+				    	let chart = new Chart(ctx, {
+						    // The type of chart we want to create
+						    type: 'horizontalBar',
+						    // The data for our dataset
+						    data:{
+						        labels: labelsData,
+						        datasets: [{
+						            label: 'Frequency',
+						            backgroundColor: 'rgb(255, 99, 132)',
+						            borderColor: 'rgb(255, 99, 132)',
+						            data: frequencyData
 						        }]
-						    }
-						}
-					});
-				}//end of else condition
-			}//end of onclick function
-		});
+						    },
+						    options: {
+							    scales: {
+							        xAxes: [{
+							            ticks: {
+							                min: 0,
+							                max: maxValue+1
+							            }
+							        }]
+							    }
+							}
+						});
+					}
+	            }// end of if for faviourite==1
+	            else{
+	            	
+	            }
+            }
+            else{
+            	alert("select no more than 2 column names");
+            }
+          //console.log(favorite);
+          
+        });//generate button click end	    	
 	}// end of displayHTMLTable
   	
 
