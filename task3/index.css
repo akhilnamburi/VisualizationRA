@@ -1,0 +1,56 @@
+body {
+  font-family: sans-serif;
+  width: 100%;
+  height: 100%;
+}
+
+:root {
+  --totalcolsRows: repeat(4, 1fr);
+}
+
+#mat > div {
+  display: grid;
+  grid-template-columns: var(--totalcolsRows);
+  padding: 5px;
+}
+
+#top {
+  display: grid;
+  grid-template-columns: var(--totalcolsRows);
+  border-bottom: 2px solid;
+  padding: 5px;
+}
+
+#side {
+  display: grid;
+  grid-template-rows: var(--totalcolsRows);
+  text-align: right;
+  border-right: 2px solid;
+}
+
+#side > div {
+  padding: 5px;
+  min-height: 50px;
+  max-height: 50px;
+}
+
+#mat > div {
+  max-height: 50px;
+  min-height: 50px;
+}
+
+#mat > div > div,
+#top > div {
+  max-width: 100px;
+  min-width: 100px;
+}
+
+.container {
+  display: grid;
+  grid-template-columns: 1fr 10fr;
+}
+
+.container > div:first-child {
+  min-width: 100px;
+  max-width: 100px;
+}
