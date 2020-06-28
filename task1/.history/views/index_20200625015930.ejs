@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8" />
+    <title>Documents</title>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/css/select2.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-contextmenu/2.7.1/jquery.contextMenu.min.css">
+    <link rel="stylesheet" href="./css/style.css" />
+  </head>
+  <body>
+    <div class="left">
+      <select
+        id='fileSelect'
+        name=""
+        placeholder="Select Doc"
+        style='width:100%;'
+      >
+        <%
+        const keys = Object.keys(files)
+        for (const key of keys) {
+         %>
+        <option value="<%=key %>"  ><%=key.split(".").slice(0, -1).join(".") %></option>
+        <% } %>
+      </select>
+    </div>
+    <div class="right" id="board">
+     
+    </div>
+
+    <ul class="custom-menu">
+      <li class="menu-item">Highlight Test</li>
+      <li class="menu-item">Option 2</li>
+      <li class="menu-item">Option 3</li>
+    </ul>
+   
+    <!-- <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script> -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/js/select2.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-contextmenu/2.7.1/jquery.contextMenu.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-contextmenu/2.7.1/jquery.ui.position.js"></script>
+    <script>
+      window.oncontextmenu = function(event) {
+        event.preventDefault();
+        return false;
+      }
+      const API_URL = 'http://localhost:3000/';
+      $(document).ready(function() {
+        $('select').select2();
+        $('select').on('change',function(){
+          var file = $(this).val();
+          var fileNameShort = file.split(".").slice(0, -1).join(".");
+          $.ajax({
+            url: API_URL+'readFile/'+file,
+            success: (data)=>{
+              var note = `
+              <div class="note the-node" id='`+fileNameShort+`' style="z-index: 999;">
+                <div class='close_note'>X</div>
+                <h3>`+fileNameShort+`</h3>
+                <p style="cursor:text;">
+                  `+data+`
+                </p>
+              </div>
+              `;
+              $("#board").append(note);
+              $(".note").css('z-index',99).draggable({
+                containment: "#board",
+                grid: [5, 5],
+                cancel: "p"
+              });
+
+            /*  var words = $( ".note#"+fileNameShort+" p" ).first().text().split( /\s+/ );
+              var text = words.join( "</span> <span>" );
+              $( ".note#"+fileNameShort+" p").first().html( "<span>" + text + "</span>" );
+              $( document ).on( "click", ".note#"+fileNameShort+" span", function() {
+                $( this ).css( "background-color", "red" );
+              });*/
+
+              document.querySelector('#' + fileNameShort + ' p').addEventListener('mouseup', function(event) {
+                if(window.getSelection) {
+                  let selection = window.getSelection();
+
+                  if(event.button === 2) {
+                    let rightClickEvent = event;
+                    document.querySelector('.custom-menu').style.display = 'block';
+                    document.querySelector('.custom-menu').style.left = rightClickEvent.clientX + 'px';
+                    document.querySelector('.custom-menu').style.top = rightClickEvent.clientY + 'px';
+
+                    const len = selection.toString().length;
+                    const part1 = rightClickEvent.target.innerHTML.substring(0, selection.anchorOffset);
+                    const part2 = rightClickEvent.target.innerHTML.substring(selection.anchorOffset + len, rightClickEvent.target.innerHTML.length);
+
+                    const selectedPart = rightClickEvent.target.innerHTML.substr(selection.anchorOffset, len);
+
+                    let range = selection.getRangeAt(0);
+                    document.designMode = "on";
+                    if (range) {
+                      selection.removeAllRanges();
+                      selection.addRange(range);
+                    }
+                    document.execCommand("backColor", false, "yellow");
+                    document.execCommand("fontColor", false, "black");
+                    document.designMode = "off";
+
+                    document.querySelectorAll('.menu-item')[0].addEventListener('click', function() {
+                      document.querySelector('.custom-menu').style.display = 'none';
+                      rightClickEvent.target.innerHTML = '<span>' + part1 + '</span><span class=highlighted-text>' + selectedPart + '</span><span>' + part2 + '</span>';
+                    });
+                  }
+                } 
+              });
+            }
+          })
+        });
+	  //right click function
+
+	//drag function for dialog box  
+        $(document).on('drag', '.note', function(){
+          $(this).click();
+        })
+        $(document).on('click', '.note', function(){
+          $(this).siblings().css('z-index', 9);
+          $(this).css('z-index', 99);
+        });
+
+        $(document).on('click','.note .close_note',function(){
+          $(this).parent().detach();
+        });
+      });
+    </script>
+  </body>
+</html>
