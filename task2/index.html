@@ -3,51 +3,91 @@
 	<head>
     <link rel="stylesheet" href="task2.css"/>
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"/>
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,500,500i,700,700i" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
   		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+      
       <script src="papaparse.min.js"></script>
       <script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
       <link rel="stylesheet" href="https://cdn.datatables.net/1.10.21/css/jquery.dataTables.min.css"/>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js"></script>
+      <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
   		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+      <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js" type="text/javascript"></script>
   		<script type="text/javascript" src="script.js"></script>
+      <style>
+          [contentEditable=true]:empty:not(:focus):before{
+              content:attr(data-ph)
+          }
+      </style>
 	</head>
-	<body>
-		<div class="container">
-      <div class="row">
-        <div class="col-sm-3"></div>
-   			  <form  style="margin-top: 15px;" class="form-inline">
-            <div class="form-group">
-              <label for="files">Upload a CSV formatted file:</label>
-              <input type="file" id="files"  class="form-control" accept=".csv" required />
-            </div>
-            <div class="form-group">
-             <button type="submit" id="submitFile" class="btn btn-primary">Upload File</button>
-             </div>
-          </form>
-      </div>
-      <div class="row" id="details1" style="display:none;">
-        <div class="col-sm-4">
-            <h3>Select Column from below list:</h3>
-            <input class="form-control" id="myInput" type="text" placeholder="Search..">
-            <div id="users"></div>
-            <button  class="btn btn-primary" type="button">Generate Graph</button><br/><br/>
-        </div>
-        <div id="users1">
-        <div class="col-sm-8" class="graphContainer">
-          <canvas id="myChart" style="display: block; height: 800px; width: 950px;"></canvas>
-        </div>
-      </div>
-      
-      <div class="row">
-        <table id="table1" id="display" width="100%"></table>
-      </div>
-      <div class="row" id="details" style="display:none;">
-        <p >Total no.of columns present in csv file:  <span id="myText1"></span></p>
-        <p >The columns present in csv file:  <b><span id="myText2"></span></b></p>
-        <p >Total no.of rows present in csv file:  <span id="myText3"></span></p>
+  <body>
 
-      </div>
-      
-  	</div>
-	</body>
+      <div id="container">
+        <div class="row">
+          <div class="col-sm-8">
+            <form  style="margin-top: 15px;" class="form-inline">
+
+              <div class="form-group">
+
+                <label for="files">Upload a CSV formatted file:</label>
+
+                <input type="file" id="files"  class="form-control" accept=".csv" required />
+
+              </div>
+
+              <div class="form-group">
+
+               <button type="submit" id="submitFile" class="btn btn-primary">Upload File</button>
+
+               </div>
+
+            </form><br>
+
+          </div>
+
+        </div><!-- row div-->
+
+        <div class="row" id="searchBox" style="display:none;">
+
+          <div class="left col-sm-3">
+
+            <div>
+
+              <h3>Select Column from below list:</h3>
+
+              <input class="form-control" id="myInput" type="text"  placeholder="Search..">
+
+            </div>
+
+            <div id="items"></div>
+        
+          </div>
+
+          <div class="right col-sm-8 " id="board">
+            <div id="dragph">
+            
+              <div id="containers" style="float: left;position: relative;">
+
+                <div id="c1" class="container" style="width: 200px;border-width: 1px;border-style: dotted;height: 44px;padding-left: 0px;padding-right: 0px;" contentEditable=true data-ph="Drag and Drop Item" readonly="readonly"></div>
+  
+              </div>
+
+            </div>
+            <div id="chartdiv"></div>
+            <button type="submit" id="getgraph" class="btn btn-primary" style="margin-left: 10px;">show Chart</button>
+            <button type="submit" id="adddiv" class="btn btn-primary" >Add Placeholder</button>
+
+          </div>
+
+
+        </div><!-- row div-->
+
+          <table id="table1" class="scrolltable" id="display" width="100%"></table>
+
+      </div><!-- main container div -->
+
+  </body>
+
 </html>
