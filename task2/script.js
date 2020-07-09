@@ -119,8 +119,9 @@
     		let chartData = {};
     		//draggable modal window
     		
-			if (selectedValue.length<3 && selectedValue.length>0){
-				if (selectedValue.length==1){
+			if (selectedValue.length<3 && selectedValue.length>0 ){
+
+				if (selectedValue.length==1 || (selectedValue[0] == selectedValue[1])){
 
 					for(let i=0;i<jsonFinalData[selectedValue[0]].length;i++){
 					    if (chartData[jsonFinalData[selectedValue[0]][i]]){
@@ -166,10 +167,38 @@
 						    }
 						};
 
-						Plotly.newPlot("myDiv", data, layout, {showLink: false});
+						Plotly.newPlot("myDiv", data, layout, {showLink: false}, {scrollZoom: true});
 
 						$( function() {
-						    $( "#dialog1" ).dialog();
+						    $( "#dialog1" ).dialog().parent().draggable({
+								    containment: '#board'
+								});
+							var ui = $("#dialog1").closest(".ui-dialog");
+							ui.draggable("option", "containment", '#board');
+							ui.resizable({
+							    handles: "n, e, s, w, se",
+							    minHeight: 250,
+							    minWidth: 250,
+							    resize: function(e, ui) {
+							      var contPos = $("#board").position();
+							      contPos.bottom = contPos.top + $("#board").height();
+							      contPos.right = contPos.left + $("#board").width();
+							      contPos.height = $("#board").height();
+							      contPos.width = $("#board").width();
+							      if (ui.position.top <= contPos.top) {
+							        ui.position.top = contPos.top + 1;
+							      }
+							      if (ui.position.left <= contPos.left) {
+							        ui.position.left = contPos.left + 1;
+							      }
+							      if (ui.size.height >= contPos.height) {
+							        ui.size.height = contPos.height - 7;
+							      }
+							      if (ui.size.width >= contPos.width) {
+							        ui.size.width = contPos.width - 7;
+							      }
+							    }
+							  });
 						  } );
 						
 					}else{
@@ -248,7 +277,8 @@
 						});
 					}
 					d3.select("#c1").selectAll("*").remove();
-
+					d3.select("#c2").remove();
+					count=2;
 				}//end of if for selectedValue==1
 				else{
 	            	//combination of numerical data
