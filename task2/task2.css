@@ -38,3 +38,15 @@ rect {
     stroke: #ccc;
     stroke-width: 2.5px;
 }
+div#tree{
+    width: 995px; 
+    height: 400px;
+    overflow-y: scroll;
+}
+svg:not(:root) {
+    overflow: scroll;
+}
+#mydiv{
+    height: 300px;
+    width: 600px;
+}

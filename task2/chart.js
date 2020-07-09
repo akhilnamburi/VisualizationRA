@@ -1,6 +1,6 @@
 function generateGraph(data){
     var width = 600,
-    height = 800,
+    height = ((data.Nodes.length*10)),
     boxWidth = 150,
     boxHeight = 20,
     gap = {
@@ -14,7 +14,18 @@ function generateGraph(data){
         left: 16
     },
     svg;
-    
+
+    if(data.Nodes.length>2000){
+        height = ((data.Nodes.length)*((gap.height+boxHeight+0.3)/2))
+    }
+    if(data.Nodes.length>1000&&data.Nodes.length<2000){
+        height = ((data.Nodes.length)*((gap.height+boxHeight+29.5)/2))
+    }
+    if(data.Nodes.length<1000){
+        height = ((data.Nodes.length)*((gap.height+boxHeight+10)/2))
+    }
+    svg = d3.select("#tree").append("xhtml:div").attr("id", "mydiv").append("svg").attr("width", width).attr("height", height)
+    .append("g").attr("transform", "translate("+ margin.left + "," + margin.top + ")");
 
 // test layout
 var Nodes = [];
@@ -183,11 +194,6 @@ function renderRelationshipGraph(data) {
     });
 }
 
-svg = d3.select("#tree").append("svg")
-    .attr("width", width)
-    .attr("height", height)
-    .style("overflow-y", "scroll")
-    .append("g");
 
     /*d3.select("svg").append("text").attr("x",500).attr("y", 10).style("cursor","pointer").text("x").on("click", function(){
         d3.select("svg").remove();

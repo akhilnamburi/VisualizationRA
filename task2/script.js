@@ -54,12 +54,12 @@
 		
 		//draggable list
     	$('.item').draggable({
-    		cancel: "a.ui-icon", 
+	        cancel: "a.ui-icon", 
 	        revert: true, 
 	        helper: "clone", 
 	        cursor: "move",
 			revertDuration: 0 ,
-			
+			containment: $('#board')
 	    });
 
     	//doppable list columns 
@@ -169,9 +169,7 @@
 						Plotly.newPlot("myDiv", data, layout, {showLink: false});
 
 						$( function() {
-						    $( "#dialog1" ).dialog().parent().draggable({
-								    containment: '#board'
-								});
+						    $( "#dialog1" ).dialog();
 						  } );
 						
 					}else{
@@ -241,6 +239,7 @@
 							}
 						} 
 						Object.keys(chartData).map(function(k){ 
+					    	//console.log("key with value: "+k +" = "+chartData[k])  
 					    	let temp={};
 					    	temp['x'] = k;
 					    	temp['y'] = chartData[k]; 
@@ -357,7 +356,7 @@
 
 					}// one is numerical and the other is categorical
 					else{
-						let t = $('<div id="tree" title="'+selectedValue[0]+'" height="100%" width="100%"  style="display: block; border: 2px;"></div>');
+						let t = $('<div id="tree" title="'+selectedValue[0]+'" style="display: block; border: 2px;"></div>');
 						$('#chartdiv').html(t);
 						d3.select('svg').remove();
 						//both are categorical
@@ -390,6 +389,7 @@
 								n.push(n1);
 							}
 						});
+						//console.log(n)
 						data = {};
 						data.Nodes = n;
 						data.links = links;
