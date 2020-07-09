@@ -246,7 +246,7 @@
 					    	finalData = [...finalData, temp];
 					    });
 						
-		            	let temp1 = $('<div id="dialog3" title="'+selectedValue[0]+'"><canvas id="myChart3" style="display: block; width:800px;"></canvas></div>');
+		            	let temp1 = $('<div id="dialog3" title="'+selectedValue[0]+' & '+selectedValue[1]+'"><canvas id="myChart3" style="display: block; width:800px;"></canvas></div>');
 						$('#chartdiv').html(temp1);
 					    //let maxValue = Math.max(...frequencyData);
 					    const ctx = document.getElementById('myChart3').getContext('2d');
@@ -311,7 +311,7 @@
 						let frequencyData = Object.values(chartData).map(function(value) {
 							return value;
 						}); 
-						let temp1 = $('<div id="dialog4" title="'+selectedValue[0]+'"><canvas id="myChart4" style="display: block; width:800px;"></canvas></div>');
+						let temp1 = $('<div id="dialog4" title="'+selectedValue[0]+' & '+selectedValue[1]+'"><canvas id="myChart4" style="display: block; width:800px;"></canvas></div>');
 						$('#chartdiv').html(temp1);
 
 				    	let maxValue = Math.max(...frequencyData);
@@ -349,14 +349,15 @@
 							}
 						});
 						$( function() {
-							    $( "#dialog4" ).dialog().parent().draggable({
+							    $( "#dialog4" ).dialog()
+							    .parent().draggable({
 								    containment: '#board'
 								});
 							  } );
 
 					}// one is numerical and the other is categorical
 					else{
-						let t = $('<div id="tree" title="'+selectedValue[0]+'" style="display: block; border: 2px;"></div>');
+						let t = $('<div id="tree" title="'+selectedValue[0]+' & '+selectedValue[1]+'" style="display: block; border: 2px;"></div>');
 						$('#chartdiv').html(t);
 						d3.select('svg').remove();
 						//both are categorical
