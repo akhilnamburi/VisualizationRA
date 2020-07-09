@@ -14,11 +14,12 @@
     });// submit file click end
 
  	function displayHTMLTable(results){
- 		let data = results.data;
+ 		let jsondata = results.data;
 		let dataprocess=[];
 		let dataHeader =[];
-		dataHeader = data.splice(0,1).toString().split(",");
-		data.pop();
+		dataHeader = jsondata.splice(0,1).toString().split(",");
+		jsondata.pop();
+
 		//column names from csv file
 		let column = []
 		let csvColumn=[]
@@ -31,7 +32,7 @@
 		$('#table1').dataTable( {
 			"columnDefs": [{"defaultContent": "-","targets": "_all"}],
 			"scrollX": true,
-        	data: data,
+        	data: jsondata,
         	"order": [[ 1, "asc" ]],
         	columns: column
     	} );
@@ -53,11 +54,12 @@
 		
 		//draggable list
     	$('.item').draggable({
-	        cancel: "a.ui-icon", 
+    		cancel: "a.ui-icon", 
 	        revert: true, 
 	        helper: "clone", 
 	        cursor: "move",
-	        revertDuration: 0 
+			revertDuration: 0 ,
+			
 	    });
 
     	//doppable list columns 
@@ -68,7 +70,6 @@
 	            // clone item to retain in original "list"
 	            var $item = ui.draggable.clone();
 	            $(this).addClass('has-drop').html($item);
-
 	        }
     	});
     	count=2;
@@ -95,8 +96,8 @@
 		let divideData={};
 		for (let i=0;i<dataHeader.length;i++){
 			let temp=[]
-			for (let j=0;j<data.length;j++){
-				temp.push(data[j][i]);
+			for (let j=0;j<jsondata.length;j++){
+				temp.push(jsondata[j][i]);
 			}
 			if (typeof(temp[0])=="number"){
 				divideData[dataHeader[i]] = "number";
@@ -168,7 +169,9 @@
 						Plotly.newPlot("myDiv", data, layout, {showLink: false});
 
 						$( function() {
-						    $( "#dialog1" ).dialog();
+						    $( "#dialog1" ).dialog().parent().draggable({
+								    containment: '#board'
+								});
 						  } );
 						
 					}else{
@@ -200,15 +203,25 @@
 							                max: maxValue+1
 							            }
 							        }]
+							    },
+							    pan: {
+						         enabled: true,
+						         mode: 'xy',
+						      	},
+								zoom: {
+							      enabled: true,
+							      mode: 'xy', // or 'x' for "drag" version
 							    }
 							}
 						});
 
 						$( function() {
-						    $( "#dialog2" ).dialog();
+						    $( "#dialog2" ).dialog().parent().draggable({
+								    containment: '#board'
+								});
 						  } );
 					}
-
+					d3.select("#c1").selectAll("*").remove();
 
 				}//end of if for selectedValue==1
 				else{
@@ -228,7 +241,6 @@
 							}
 						} 
 						Object.keys(chartData).map(function(k){ 
-					    	//console.log("key with value: "+k +" = "+chartData[k])  
 					    	let temp={};
 					    	temp['x'] = k;
 					    	temp['y'] = chartData[k]; 
@@ -264,26 +276,36 @@
 								                max: 50
 								            }
 								        }]
+								    },
+								    pan: {
+							         enabled: true,
+							         mode: 'xy',
+							      	},
+									zoom: {
+								      enabled: true,
+								      mode: 'xy', // or 'x' for "drag" version
 								    }
 								}
 							});
 							$( function() {
-							    $( "#dialog3" ).dialog();
+							    $( "#dialog3" ).dialog().parent().draggable({
+								    containment: '#board'
+								});
 							  } );
 					}// both are numerical data
 					else if(divideData[selectedValue[0]] != divideData[selectedValue[1]] ){
-	            		for (let j=0;j<favorite.length;j++){
-		            		for(let i=0;i<jsonFinalData[favorite[j]].length;i++){
+	            		for (let j=0;j<selectedValue.length;j++){
+		            		for(let i=0;i<jsonFinalData[selectedValue[j]].length;i++){
 		            			
-							    if (chartData[jsonFinalData[favorite[j]][i]]){
-							    	chartData[jsonFinalData[favorite[j]][i]] += 1;
+							    if (chartData[jsonFinalData[selectedValue[j]][i]]){
+							    	chartData[jsonFinalData[selectedValue[j]][i]] += 1;
 							    } 
 							    else{
-							    	chartData[jsonFinalData[favorite[j]][i]] = 1;
+							    	chartData[jsonFinalData[selectedValue[j]][i]] = 1;
 							    }
 							}
 						}
-						console.log(chartData);
+						
 						let labelsData = Object.keys(chartData).map(function(key) {
 							return key;
 						});
@@ -316,34 +338,72 @@
 							                max: maxValue+1
 							            }
 							        }]
+							    },
+							    pan: {
+						         enabled: true,
+						         mode: 'xy',
+						      	},
+								zoom: {
+							      enabled: true,
+							      mode: 'xy', // or 'x' for "drag" version
 							    }
 							}
 						});
 						$( function() {
-							    $( "#dialog4" ).dialog();
+							    $( "#dialog4" ).dialog().parent().draggable({
+								    containment: '#board'
+								});
 							  } );
 
 					}// one is numerical and the other is categorical
 					else{
+						let t = $('<div id="tree" title="'+selectedValue[0]+'" height="100%" width="100%"  style="display: block; border: 2px;"></div>');
+						$('#chartdiv').html(t);
+						d3.select('svg').remove();
 						//both are categorical
-						categoricalJsonData={};
-						for (let j=0;j<selectedValue.length;j++){
-							chartData={};
-		            		for(let i=0;i<jsonFinalData[selectedValue[j]].length;i++){
-							    if (chartData[jsonFinalData[selectedValue[j]][i]]){
-							    	chartData[jsonFinalData[selectedValue[j]][i]] += 1;
-							    } 
-							    else{
-							    	chartData[jsonFinalData[selectedValue[j]][i]] = 1;
-							    }
+						nodes = [];
+						links = [];
+						categoricalJsonData=[];
+						for (let i=0;i<(jsonFinalData[selectedValue[0]].length);i++){
+							temp={};
+							temp.lvl = 0;
+							temp.name = jsonFinalData[selectedValue[0]][i];
+							nodes.push(temp);
+							temp2={};
+							temp2.lvl = 1;
+							temp2.name = jsonFinalData[selectedValue[1]][i];
+							nodes.push(temp2);
+							temp1={};
+							temp1.source = jsonFinalData[selectedValue[0]][i];
+							temp1.target = jsonFinalData[selectedValue[1]][i];
+							links.push(temp1);
+						}
+						n = [];
+						nodes.forEach(n1 => {
+							let p = 0;
+							n.forEach(n2=>{
+								if(n1.name==n2.name){
+									p = 1;
+								}
+							})
+							if(p==0){
+								n.push(n1);
 							}
-							categoricalJsonData[selectedValue[j]]=chartData;
-						} 
+						});
+						data = {};
+						data.Nodes = n;
+						data.links = links;
+						generateGraph(data);
+						$( function() {
+							$( "#tree" ).dialog().parent().draggable({
+								    containment: '#board'
+								});
+						} );
 						
-
-
 					}//end of else for both columsn are categorical data
-						
+					d3.select("#c1").selectAll("*").remove();
+					d3.select("#c2").remove();
+					count = 2;
 	            }//end of else for selectedValue==2
 
 
