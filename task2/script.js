@@ -216,8 +216,36 @@
 						$( function() {
 						    $( "#dialog2" ).dialog().parent().draggable({
 								    containment: '#board'
+								}).resizable({
+								    containment: '#board'
 								});
-						  } );
+							var ui = $("#dialog2").closest(".ui-dialog");
+							ui.draggable("option", "containment", '#board');
+							ui.resizable({
+							    handles: "n, e, s, w, se",
+							    minHeight: 250,
+							    minWidth: 250,
+							    resize: function(e, ui) {
+							      var contPos = $("#board").position();
+							      contPos.bottom = contPos.top + $("#board").height();
+							      contPos.right = contPos.left + $("#board").width();
+							      contPos.height = $("#board").height();
+							      contPos.width = $("#board").width();
+							      if (ui.position.top <= contPos.top) {
+							        ui.position.top = contPos.top + 1;
+							      }
+							      if (ui.position.left <= contPos.left) {
+							        ui.position.left = contPos.left + 1;
+							      }
+							      if (ui.size.height >= contPos.height) {
+							        ui.size.height = contPos.height - 7;
+							      }
+							      if (ui.size.width >= contPos.width) {
+							        ui.size.width = contPos.width - 7;
+							      }
+							    }
+							  });
+						});
 					}
 					d3.select("#c1").selectAll("*").remove();
 
@@ -287,9 +315,37 @@
 								}
 							});
 							$( function() {
-							    $( "#dialog3" ).dialog().parent().draggable({
+							    $( "#dialog3" ).dialog({width:200,height:300}).parent().draggable({
+								    containment: '#board'
+								}).resizable({
 								    containment: '#board'
 								});
+								var ui = $("#dialog3").closest(".ui-dialog");
+								ui.draggable("option", "containment", '#board');
+								ui.resizable({
+								    handles: "n, e, s, w, se",
+								    minHeight: 250,
+								    minWidth: 250,
+								    resize: function(e, ui) {
+								      var contPos = $("#board").position();
+								      contPos.bottom = contPos.top + $("#board").height();
+								      contPos.right = contPos.left + $("#board").width();
+								      contPos.height = $("#board").height();
+								      contPos.width = $("#board").width();
+								      if (ui.position.top <= contPos.top) {
+								        ui.position.top = contPos.top + 1;
+								      }
+								      if (ui.position.left <= contPos.left) {
+								        ui.position.left = contPos.left + 1;
+								      }
+								      if (ui.size.height >= contPos.height) {
+								        ui.size.height = contPos.height - 7;
+								      }
+								      if (ui.size.width >= contPos.width) {
+								        ui.size.width = contPos.width - 7;
+								      }
+								    }
+								  });
 							  } );
 					}// both are numerical data
 					else if(divideData[selectedValue[0]] != divideData[selectedValue[1]] ){
@@ -349,10 +405,38 @@
 							}
 						});
 						$( function() {
-							    $( "#dialog4" ).dialog()
+							    $( "#dialog4" ).dialog({width:200,height:300})
 							    .parent().draggable({
 								    containment: '#board'
+								}).resizable({
+								    containment: '#board'
 								});
+								var ui = $("#dialog4").closest(".ui-dialog");
+								ui.draggable("option", "containment", '#board');
+								ui.resizable({
+								    handles: "n, e, s, w, se",
+								    minHeight: 250,
+								    minWidth: 250,
+								    resize: function(e, ui) {
+								      var contPos = $("#board").position();
+								      contPos.bottom = contPos.top + $("#board").height();
+								      contPos.right = contPos.left + $("#board").width();
+								      contPos.height = $("#board").height();
+								      contPos.width = $("#board").width();
+								      if (ui.position.top <= contPos.top) {
+								        ui.position.top = contPos.top + 1;
+								      }
+								      if (ui.position.left <= contPos.left) {
+								        ui.position.left = contPos.left + 1;
+								      }
+								      if (ui.size.height >= contPos.height) {
+								        ui.size.height = contPos.height - 7;
+								      }
+								      if (ui.size.width >= contPos.width) {
+								        ui.size.width = contPos.width - 7;
+								      }
+								    }
+								  });
 							  } );
 
 					}// one is numerical and the other is categorical
@@ -396,9 +480,37 @@
 						data.links = links;
 						generateGraph(data);
 						$( function() {
-							$( "#tree" ).dialog().parent().draggable({
+							$( "#tree" ).dialog({width:200,height:300}).parent().draggable({
+								    containment: '#board'
+								}).resizable({
 								    containment: '#board'
 								});
+								var ui = $("#tree").closest(".ui-dialog");
+								ui.draggable("option", "containment", '#board');
+								ui.resizable({
+								    handles: "n, e, s, w, se",
+								    minHeight: 250,
+								    minWidth: 250,
+								    resize: function(e, ui) {
+								      var contPos = $("#board").position();
+								      contPos.bottom = contPos.top + $("#board").height();
+								      contPos.right = contPos.left + $("#board").width();
+								      contPos.height = $("#board").height();
+								      contPos.width = $("#board").width();
+								      if (ui.position.top <= contPos.top) {
+								        ui.position.top = contPos.top + 1;
+								      }
+								      if (ui.position.left <= contPos.left) {
+								        ui.position.left = contPos.left + 1;
+								      }
+								      if (ui.size.height >= contPos.height) {
+								        ui.size.height = contPos.height - 7;
+								      }
+								      if (ui.size.width >= contPos.width) {
+								        ui.size.width = contPos.width - 7;
+								      }
+								    }
+								  });
 						} );
 						
 					}//end of else for both columsn are categorical data
