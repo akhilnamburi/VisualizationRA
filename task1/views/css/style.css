@@ -107,9 +107,19 @@ div.note .close_note {
     justify-content: center;
     align-items: center;
     background: rgb(255, 255, 255) !important;
-    overflow: scroll;
     display: none;
-    padding: 1rem;
+    padding-bottom: 1.9rem;
+  }
+
+  .all-data-wrapper, .bubblemap-wrapper {
+    overflow: scroll;
+    outline: none;
+  }
+
+  .all-data {
+    width: 100%;
+    height: 100%;
+    border: none !important;
   }
 
   .all-data svg {
@@ -120,6 +130,7 @@ div.note .close_note {
   .matrix-data {
     width: 100%;
     height: 100%;
+    padding: 0 !important;
   }
 
   .matrix-data svg {
@@ -129,6 +140,25 @@ div.note .close_note {
 
   .button-wrapper {
     margin: 2rem 0;
-    display: flex;
-    justify-content: space-between;
+  }
+
+  .button-wrapper input {
+    margin: 0.5rem;
+  }
+
+  .bubblemap-box {
+    height: 15rem;
+    background: rgb(255, 255, 255) !important;
+    margin: 0;
+    padding-bottom: 1.9rem;
+    display: none;
+  }
+
+  .bubblemap-wrapper {
+    height: 100%;
+    width: 100%;
+  }
+
+  .bubblemap {
+    border: none !important;
   }

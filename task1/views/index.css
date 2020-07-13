@@ -11,7 +11,6 @@ body {
 #mat > div {
   display: grid !important;
   grid-template-columns: var(--totalcolsRows) !important;
-  padding: 5px !important;
 }
 
 #top {
@@ -53,4 +52,41 @@ body {
 .container > div:first-child {
   min-width: 100px;
   max-width: 100px;
+}
+
+#mat > div [id^="id_"] {
+  border: 1px solid grey;
+  background: orange;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-width: auto !important;
+  color: #fff;
+  font-weight: bold;
+}
+
+#mat > div [id^="id_"]:first-of-type {
+  border-left: 2px solid grey;
+}
+
+#mat > div:first-of-type [id^="id_"] {
+  border-top: 2px solid grey;
+}
+
+#mat > div:last-of-type [id^="id_"] {
+  border-bottom: 2px solid grey;
+}
+
+#mat > div [id^="id_"]:last-of-type {
+  border-right: 2px solid grey;
+}
+
+.matrix-element * {
+  font-size: 0.6rem !important;
+}
+
+#top > div {
+  word-wrap: break-word !important;
+  width: 40px !important;
+  min-width: auto !important;
 }
