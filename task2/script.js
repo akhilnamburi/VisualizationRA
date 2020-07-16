@@ -7,6 +7,7 @@
 			config: {
 				dynamicTyping: true,
 				skipEmptyLines: true,
+				delimeter:"[, %]",
 				trimEmptyTrailingLines:true,
 				complete: displayHTMLTable,
 			}
@@ -19,16 +20,19 @@
 		let dataHeader =[];
 		dataHeader = jsondata.splice(0,1).toString().split(",");
 		jsondata.pop();
-
-		/*let re=/^[0-9,.%]*$/;
+		
+		let re=/^[0-9,.%]*$/;
 		for(let i=0;i<jsondata.length;i++){
 			for(let j=0;j<jsondata[0].length;j++){
-				if(typeof(jsondata[i][j] == "string") && re.test(jsondata[i][j])){
-					jsondata[i][j] = parseFloat(jsondata[i][j].replace(/[,%]/g, ''));
+				if(jsondata[i][j]){
+					if(typeof(jsondata[i][j] == "string") && re.test(jsondata[i][j])){
+						jsondata[i][j] = parseFloat(jsondata[i][j].toString().replace(/[,%]/g, ''));
+					}
 				}
 			}
 		}
-		console.log(jsondata);*/
+		
+
 		//column names from csv file
 		let column = []
 		let csvColumn=[]
