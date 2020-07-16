@@ -20,6 +20,15 @@
 		dataHeader = jsondata.splice(0,1).toString().split(",");
 		jsondata.pop();
 
+		/*let re=/^[0-9,.%]*$/;
+		for(let i=0;i<jsondata.length;i++){
+			for(let j=0;j<jsondata[0].length;j++){
+				if(typeof(jsondata[i][j] == "string") && re.test(jsondata[i][j])){
+					jsondata[i][j] = parseFloat(jsondata[i][j].replace(/[,%]/g, ''));
+				}
+			}
+		}
+		console.log(jsondata);*/
 		//column names from csv file
 		let column = []
 		let csvColumn=[]
@@ -119,8 +128,7 @@
     		let chartData = {};
     		//draggable modal window
     		
-			if (selectedValue.length<3 && selectedValue.length>0 ){
-
+			if (selectedValue.length<3 && selectedValue.length>0){
 				if (selectedValue.length==1 || (selectedValue[0] == selectedValue[1])){
 
 					for(let i=0;i<jsonFinalData[selectedValue[0]].length;i++){
@@ -131,7 +139,6 @@
 					    	chartData[jsonFinalData[selectedValue[0]][i]] = 1;
 					    }
 					}
-					
 
 					let labelsData = Object.keys(chartData).map(function(key) {
 							return key;
@@ -167,7 +174,7 @@
 						    }
 						};
 
-						Plotly.newPlot("myDiv", data, layout, {showLink: false}, {scrollZoom: true});
+						Plotly.newPlot("myDiv", data, layout, {showLink: false});
 
 						$( function() {
 						    $( "#dialog1" ).dialog().parent().draggable({
@@ -237,10 +244,11 @@
 						      	},
 								zoom: {
 							      enabled: true,
-							      mode: 'xy', // or 'x' for "drag" version
+							      mode: 'y', // or 'x' for "drag" version
 							    }
 							}
 						});
+
 
 						$( function() {
 						    $( "#dialog2" ).dialog().parent().draggable({
@@ -279,9 +287,10 @@
 					d3.select("#c1").selectAll("*").remove();
 					d3.select("#c2").remove();
 					count=2;
+
 				}//end of if for selectedValue==1
 				else{
-	            	//combination of numerical data
+	            	//combination of numerical data 
 	            	let finalData=[];
 	            	if (divideData[selectedValue[0]] == "number" && divideData[selectedValue[1]] == "number" ){
 	            		let finalData=[];
@@ -340,7 +349,7 @@
 							      	},
 									zoom: {
 								      enabled: true,
-								      mode: 'xy', // or 'x' for "drag" version
+								      mode: 'y', // or 'x' for "drag" version
 								    }
 								}
 							});
@@ -379,17 +388,31 @@
 							  } );
 					}// both are numerical data
 					else if(divideData[selectedValue[0]] != divideData[selectedValue[1]] ){
-	            		for (let j=0;j<selectedValue.length;j++){
-		            		for(let i=0;i<jsonFinalData[selectedValue[j]].length;i++){
-		            			
-							    if (chartData[jsonFinalData[selectedValue[j]][i]]){
-							    	chartData[jsonFinalData[selectedValue[j]][i]] += 1;
-							    } 
-							    else{
-							    	chartData[jsonFinalData[selectedValue[j]][i]] = 1;
-							    }
+						// combination of numerical and categorical data
+	            		
+						
+						for(let i=0;i<jsonFinalData[selectedValue[0]].length;i++){
+							if(typeof(jsonFinalData[selectedValue[0]][0]) == "string"){
+								if (chartData[jsonFinalData[selectedValue[0]][i]]){
+									chartData[jsonFinalData[selectedValue[0]][i]] += jsonFinalData[selectedValue[1]][i];
+								}
+								else{
+									chartData[jsonFinalData[selectedValue[0]][i]] = jsonFinalData[selectedValue[1]][i];
+								}
 							}
+							else{
+								if (chartData[jsonFinalData[selectedValue[1]][i]]){
+									chartData[jsonFinalData[selectedValue[1]][i]] += jsonFinalData[selectedValue[0]][i];
+								}
+								else{
+									chartData[jsonFinalData[selectedValue[1]][i]] = jsonFinalData[selectedValue[0]][i];
+								}
+							}
+							//t[selectedValue[1]] = jsonFinalData[selectedValue[1]][i];
+							//numcat.push(t);
 						}
+						console.log(chartData);
+
 						
 						let labelsData = Object.keys(chartData).map(function(key) {
 							return key;
@@ -430,7 +453,7 @@
 						      	},
 								zoom: {
 							      enabled: true,
-							      mode: 'xy', // or 'x' for "drag" version
+							      mode: 'y', // or 'x' for "drag" version
 							    }
 							}
 						});
@@ -469,6 +492,7 @@
 								  });
 							  } );
 
+
 					}// one is numerical and the other is categorical
 					else{
 						let t = $('<div id="tree" title="'+selectedValue[0]+' & '+selectedValue[1]+'" style="display: block; border: 2px;"></div>');
@@ -504,43 +528,13 @@
 								n.push(n1);
 							}
 						});
-						//console.log(n)
+						
 						data = {};
 						data.Nodes = n;
 						data.links = links;
 						generateGraph(data);
 						$( function() {
-							$( "#tree" ).dialog({width:200,height:300}).parent().draggable({
-								    containment: '#board'
-								}).resizable({
-								    containment: '#board'
-								});
-								var ui = $("#tree").closest(".ui-dialog");
-								ui.draggable("option", "containment", '#board');
-								ui.resizable({
-								    handles: "n, e, s, w, se",
-								    minHeight: 250,
-								    minWidth: 250,
-								    resize: function(e, ui) {
-								      var contPos = $("#board").position();
-								      contPos.bottom = contPos.top + $("#board").height();
-								      contPos.right = contPos.left + $("#board").width();
-								      contPos.height = $("#board").height();
-								      contPos.width = $("#board").width();
-								      if (ui.position.top <= contPos.top) {
-								        ui.position.top = contPos.top + 1;
-								      }
-								      if (ui.position.left <= contPos.left) {
-								        ui.position.left = contPos.left + 1;
-								      }
-								      if (ui.size.height >= contPos.height) {
-								        ui.size.height = contPos.height - 7;
-								      }
-								      if (ui.size.width >= contPos.width) {
-								        ui.size.width = contPos.width - 7;
-								      }
-								    }
-								  });
+							$( "#tree" ).dialog();
 						} );
 						
 					}//end of else for both columsn are categorical data
