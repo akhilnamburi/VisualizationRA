@@ -7,31 +7,18 @@
 			config: {
 				dynamicTyping: true,
 				skipEmptyLines: true,
-				delimeter:"[, %]",
-				trimEmptyTrailingLines:true,
 				complete: displayHTMLTable,
 			}
 		});//parse function end
     });// submit file click end
 
  	function displayHTMLTable(results){
+
  		let jsondata = results.data;
 		let dataprocess=[];
 		let dataHeader =[];
 		dataHeader = jsondata.splice(0,1).toString().split(",");
 		jsondata.pop();
-		
-		let re=/^[0-9,.%]*$/;
-		for(let i=0;i<jsondata.length;i++){
-			for(let j=0;j<jsondata[0].length;j++){
-				if(jsondata[i][j]){
-					if(typeof(jsondata[i][j] == "string") && re.test(jsondata[i][j])){
-						jsondata[i][j] = parseFloat(jsondata[i][j].toString().replace(/[,%]/g, ''));
-					}
-				}
-			}
-		}
-		
 
 		//column names from csv file
 		let column = []
@@ -132,8 +119,11 @@
     		let chartData = {};
     		//draggable modal window
     		
-			if (selectedValue.length<3 && selectedValue.length>0){
+			if (selectedValue.length<3 && selectedValue.length>0 ){
+
+
 				if (selectedValue.length==1 || (selectedValue[0] == selectedValue[1])){
+					
 
 					for(let i=0;i<jsonFinalData[selectedValue[0]].length;i++){
 					    if (chartData[jsonFinalData[selectedValue[0]][i]]){
@@ -143,19 +133,24 @@
 					    	chartData[jsonFinalData[selectedValue[0]][i]] = 1;
 					    }
 					}
+					
+					let d3Data=[];
+
+					for(let i=0;i<Object.keys(chartData).length;i++){
+						let t ={};
+						t["key"] = Object.keys(chartData)[i];
+						t["value"] = Object.values(chartData)[i];
+						d3Data.push(t);
+					}
+					
 
 					let labelsData = Object.keys(chartData).map(function(key) {
 							return key;
 						});
 					let frequencyData = Object.values(chartData).map(function(value) {
 						return value;
-					});  
-					/*let temp=$('<div id="dialog" title="Chart"><p></p></div>');
-		    		$("#dragph").append(temp);
-		    		
-		    		$( function() {
-					    $( "#dialog" ).dialog();
-					  } );*/
+					});
+
 
 					if((selectedValue[0]).toLowerCase() == "country" || (selectedValue[0]).toLowerCase() == "state"){
 						let temp1 = $('<div id="dialog1" title="Country Chart"><div id="myDiv"></div></div>');
@@ -214,11 +209,11 @@
 						
 					}else{
 						//delete chart and recreate it
-				    	
-						let temp1 = $('<div id="dialog2" title="'+selectedValue[0]+'"><canvas id="myChart2" style="display: block; width:800px;"></canvas></div>');
-						$('#chartdiv').html(temp1);
 
-				    	let maxValue = Math.max(...frequencyData);
+						let temp1 = $('<div id="dialog2" title="'+selectedValue[0]+' & '+selectedValue[1]+'"><canvas id="myChart2" style="display: block; width:800px;"></canvas></div>');
+						$('#chartdiv').html(temp1);
+						
+						let maxValue = Math.max(...frequencyData);
 				    	const ctx = document.getElementById('myChart2').getContext('2d');
 				    	let chart = new Chart(ctx, {
 						    // The type of chart we want to create
@@ -252,6 +247,7 @@
 							    }
 							}
 						});
+						
 
 
 						$( function() {
@@ -288,13 +284,15 @@
 							  });
 						});
 					}
+
+
+
 					d3.select("#c1").selectAll("*").remove();
 					d3.select("#c2").remove();
 					count=2;
-
 				}//end of if for selectedValue==1
 				else{
-	            	//combination of numerical data 
+	            	//combination of numerical data
 	            	let finalData=[];
 	            	if (divideData[selectedValue[0]] == "number" && divideData[selectedValue[1]] == "number" ){
 	            		let finalData=[];
@@ -392,33 +390,23 @@
 							  } );
 					}// both are numerical data
 					else if(divideData[selectedValue[0]] != divideData[selectedValue[1]] ){
-						// combination of numerical and categorical data
-	            		
-						
-						for(let i=0;i<jsonFinalData[selectedValue[0]].length;i++){
-							if(typeof(jsonFinalData[selectedValue[0]][0]) == "string"){
-								if (chartData[jsonFinalData[selectedValue[0]][i]]){
-									chartData[jsonFinalData[selectedValue[0]][i]] += jsonFinalData[selectedValue[1]][i];
-								}
-								else{
-									chartData[jsonFinalData[selectedValue[0]][i]] = jsonFinalData[selectedValue[1]][i];
-								}
+
+						// numerical + categorical data
+
+	            		for (let j=0;j<selectedValue.length;j++){
+		            		for(let i=0;i<jsonFinalData[selectedValue[j]].length;i++){
+		            			
+							    if (chartData[jsonFinalData[selectedValue[j]][i]]){
+							    	chartData[jsonFinalData[selectedValue[j]][i]] += 1;
+							    } 
+							    else{
+							    	chartData[jsonFinalData[selectedValue[j]][i]] = 1;
+							    }
 							}
-							else{
-								if (chartData[jsonFinalData[selectedValue[1]][i]]){
-									chartData[jsonFinalData[selectedValue[1]][i]] += jsonFinalData[selectedValue[0]][i];
-								}
-								else{
-									chartData[jsonFinalData[selectedValue[1]][i]] = jsonFinalData[selectedValue[0]][i];
-								}
-							}
-							//t[selectedValue[1]] = jsonFinalData[selectedValue[1]][i];
-							//numcat.push(t);
 						}
 						console.log(chartData);
-
-						
-						let labelsData = Object.keys(chartData).map(function(key) {
+						 
+						labelsData = Object.keys(chartData).map(function(key) {
 							return key;
 						});
 						let frequencyData = Object.values(chartData).map(function(value) {
@@ -496,7 +484,6 @@
 								  });
 							  } );
 
-
 					}// one is numerical and the other is categorical
 					else{
 						let t = $('<div id="tree" title="'+selectedValue[0]+' & '+selectedValue[1]+'" style="display: block; border: 2px;"></div>');
@@ -532,13 +519,43 @@
 								n.push(n1);
 							}
 						});
-						
+						//console.log(n)
 						data = {};
 						data.Nodes = n;
 						data.links = links;
 						generateGraph(data);
 						$( function() {
-							$( "#tree" ).dialog();
+							$( "#tree" ).dialog({width:200,height:300}).parent().draggable({
+								    containment: '#board'
+								}).resizable({
+								    containment: '#board'
+								});
+								var ui = $("#tree").closest(".ui-dialog");
+								ui.draggable("option", "containment", '#board');
+								ui.resizable({
+								    handles: "n, e, s, w, se",
+								    minHeight: 250,
+								    minWidth: 250,
+								    resize: function(e, ui) {
+								      var contPos = $("#board").position();
+								      contPos.bottom = contPos.top + $("#board").height();
+								      contPos.right = contPos.left + $("#board").width();
+								      contPos.height = $("#board").height();
+								      contPos.width = $("#board").width();
+								      if (ui.position.top <= contPos.top) {
+								        ui.position.top = contPos.top + 1;
+								      }
+								      if (ui.position.left <= contPos.left) {
+								        ui.position.left = contPos.left + 1;
+								      }
+								      if (ui.size.height >= contPos.height) {
+								        ui.size.height = contPos.height - 7;
+								      }
+								      if (ui.size.width >= contPos.width) {
+								        ui.size.width = contPos.width - 7;
+								      }
+								    }
+								  });
 						} );
 						
 					}//end of else for both columsn are categorical data
