@@ -32,11 +32,14 @@ var Nodes = [];
 var links = [];
 var lvlCount = 0;
 
-var diagonal = d3.svg.diagonal()
-    .projection(function (d) {
-        "use strict";
-        return [d.y, d.x];
-    });
+var diagonal = function link(d) {
+    "use strict";
+  return "M" + d.source.y + "," + d.source.x
+      + "C" + (d.source.y + d.target.y) / 2 + "," + d.source.x
+      + " " + (d.source.y + d.target.y) / 2 + "," + d.target.x
+      + " " + d.target.y + "," + d.target.x;
+};
+
 
 function find(text) {
     "use strict";
@@ -193,12 +196,6 @@ function renderRelationshipGraph(data) {
             });
     });
 }
-
-
-    /*d3.select("svg").append("text").attr("x",500).attr("y", 10).style("cursor","pointer").text("x").on("click", function(){
-        d3.select("svg").remove();
-    })*/
-
 
 
     renderRelationshipGraph(data);
