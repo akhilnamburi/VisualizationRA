@@ -76,3 +76,8 @@ svg:not(:root) {
   padding: 14px;
   text-align: center;
 }
+
+.ui-contextmenu{
+    position: absolute;
+    z-index: 999999;
+}

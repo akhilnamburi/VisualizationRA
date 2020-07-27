@@ -15,7 +15,15 @@
     });// submit file click end
 
  	function displayHTMLTable(results){
- 		let jsondata = results.data;
+ 		let jdata = results.data;
+ 		let jsondata=[];
+ 		console.log(typeof(jdata[1][2]))
+ 		for(let i=0;i<jdata.length;i++){
+ 			if(jdata[i][2]!= null){
+ 				jsondata.push(jdata[i]);
+ 			}
+ 		}
+ 		console.log(jsondata);
 		let dataprocess=[];
 		let dataHeader =[];
 		dataHeader = jsondata.splice(0,1).toString().split(",");
@@ -119,15 +127,11 @@
 			}
 			jsonFinalData[dataHeader[i]] = temp;
 		}
+		let selectedValue=[];
 
     	//charts on click
-    	$('#getgraph').on("click",function(e){
-    		e.preventDefault();
-    		let selectedValue=[];
-    		let elements = document.getElementById('containers').children;
-    		for(let i=0;i<elements.length;i++){
-    			selectedValue.push((($(elements[i]).text()).trim().toString()));
-    		}
+    	function graph(){
+
 
     		let chartData = {};
 
@@ -198,8 +202,6 @@
 
 
 					if((selectedValue[0]).toLowerCase() == "country" || (selectedValue[0]).toLowerCase() == "state"){
-
-						console.log(labelsData);
 						let temp1 = $('<div id="dialog1" title="Country Chart"><div id="myDiv"></div></div>');
 						$('#chartdiv').html(temp1);
 
@@ -305,8 +307,6 @@
 						
 						let temp1 = $('<div id="dialog2" title="'+selectedValue[0]+'"></div>');
 						$('#chartdiv').html(temp1);
-						console.log(d3Data);
-
 						var margin = {top: 20, right: 20, bottom: 30, left: 40},
 					    width = 960 - margin.left - margin.right,
 					    height = 500 - margin.top - margin.bottom;
@@ -374,16 +374,10 @@
 							    }
 							}
 						} 
-
-
-						
-
-					    
 						
 		            	let temp1 = $('<div id="dialog3" title="'+selectedValue[0]+' & '+selectedValue[1]+'"></div>');
 						$('#chartdiv').html(temp1);
-					    //let maxValue = Math.max(...frequencyData);
-
+	
 					    
 					    let d3Data=[];
 					    for(let i=0;i<jsonFinalData[selectedValue[0]].length;i++){
@@ -393,10 +387,6 @@
 					    	d3Data.push(t);
 					    }
 
-					    //var n=Object.keys(chartData).length;
-					    //var xMax = Math.max(...d3Data.map(o => o.x));
-					    //var yMax = Math.max(...d3Data.map(o => o.y));
-
 					    var margin = {top: 20, right: 20, bottom: 30, left: 50},
 					    width = 960 - margin.left - margin.right,
 					    height = 500 - margin.top - margin.bottom;
@@ -405,9 +395,7 @@
 
 						var svg = d3.select("#dialog3").append("svg")
 						    .attr("viewBox", `0 0 300 600`)
-							.call(d3.zoom().on("zoom", function () {
-								svg.attr("transform", d3.event.transform)
-							}))
+							
 						  	.append("g")
 						    .attr("transform",
 						          "translate(" + margin.left + "," + margin.top + ")");
@@ -422,14 +410,36 @@
 						    .attr("cx", function(d) { return x(d.x); })
 						    .attr("cy", function(d) { return y(d.y); });
 
+						var zoom = d3.zoom()
+								      .scaleExtent([.5, 20])  // This control how much you can unzoom (x0.5) and zoom (x20)
+								      .extent([[0, 0], [width, height]])
+								      .on("zoom", updateChart);
+
 						  // Add the X Axis
 						svg.append("g")
-						    .attr("transform", "translate(0," + height + ")")
+						    .attr("transform", "translate(0," + height + ")").call(zoom)
 						    .call(d3.axisBottom(x));
 						  // Add the Y Axis
 
 						svg.append("g")
 						    .call(d3.axisLeft(y));
+
+						function updateChart() {
+
+						    // recover the new scale
+						    var newX = d3.event.transform.rescaleX(x);
+						    var newY = d3.event.transform.rescaleY(y);
+
+						    // update axes with these new boundaries
+						    xAxis.call(d3.axisBottom(newX))
+						    yAxis.call(d3.axisLeft(newY))
+
+						    // update circle position
+						    scatter
+						      .selectAll("circle")
+						      .attr('cx', function(d) {return newX(d.x)})
+						      .attr('cy', function(d) {return newY(d.y)});
+						  }
 					    
 							restrictGraph("dialog3");
 							
@@ -468,7 +478,6 @@
 
 						let temp1 = $('<div id="dialog4" title="'+selectedValue[0]+' & '+selectedValue[1]+'"></div>');
 						$('#chartdiv').html(temp1);
-						console.log(d3Data);
 
 						var margin = {top: 20, right: 20, bottom: 30, left: 40},
 					    width = 960 - margin.left - margin.right,
@@ -584,7 +593,8 @@
 			        uiIcon: "ui-icon-copy"
 			    },  {
 			        title: "----"
-			    }],
+			    }
+			    ],
 			    // Handle menu selection to implement a fake-clipboard
 			    select: function (event, ui) {
 			        var $target = ui.target;
@@ -596,12 +606,22 @@
 			                CLIPBOARD = "";
 			                break
 			        }
-			        alert("select " + ui.cmd + " on " + $target.text());
+
+			        selectedValue = $target.text().split('&').map(item=>item.trim());
+			        graph();
+			        
 			        // Optionally return false, to prevent closing the menu now
 			    }
 			});//right click context menu
-
-
+		}
+		$('#getgraph').on("click",function(e){
+    		e.preventDefault();
+    		selectedValue=[];
+    		let elements = document.getElementById('containers').children;
+    		for(let i=0;i<elements.length;i++){
+    			selectedValue.push((($(elements[i]).text()).trim().toString()));
+    		}
+    		graph();
     	});// getgraph click function end
     	
 
