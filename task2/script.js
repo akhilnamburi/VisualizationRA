@@ -17,13 +17,13 @@
  	function displayHTMLTable(results){
  		let jdata = results.data;
  		let jsondata=[];
- 		console.log(typeof(jdata[1][2]))
+ 		
  		for(let i=0;i<jdata.length;i++){
  			if(jdata[i][2]!= null){
  				jsondata.push(jdata[i]);
  			}
  		}
- 		console.log(jsondata);
+ 		
 		let dataprocess=[];
 		let dataHeader =[];
 		dataHeader = jsondata.splice(0,1).toString().split(",");
@@ -132,9 +132,7 @@
     	//charts on click
     	function graph(){
 
-
     		let chartData = {};
-
     		// restrict modal box to right grid 
     		function restrictGraph(id) {
     		 	
@@ -175,6 +173,7 @@
 			if (selectedValue.length<3 && selectedValue.length>0){
 				if (selectedValue.length==1 || (selectedValue[0] == selectedValue[1])){
 
+					//console.log(selectedValue);
 					for(let i=0;i<jsonFinalData[selectedValue[0]].length;i++){
 					    if (chartData[jsonFinalData[selectedValue[0]][i]]){
 					    	chartData[jsonFinalData[selectedValue[0]][i]] += 1;
@@ -200,10 +199,12 @@
 						return value;
 					});
 
-
+					
 					if((selectedValue[0]).toLowerCase() == "country" || (selectedValue[0]).toLowerCase() == "state"){
-						let temp1 = $('<div id="dialog1" title="Country Chart"><div id="myDiv"></div></div>');
+						let temp1 = $('<div id="dialog1" title="Country"><div id="myDiv"></div></div>');
 						$('#chartdiv').html(temp1);
+
+						
 
 						var margin = {top: 10, right: 10, bottom: 10, left: 10};
                         var width = 960 - margin.left - margin.right;
@@ -273,7 +274,6 @@
                                 })
                                 .attr("d", path )
                                 .on("mouseover",function(d,i){
-                                    //console.log(d);
                                     d3.select(this)
                                         .style("opacity", .8)
                                         .style("stroke","white")
@@ -387,42 +387,67 @@
 					    	d3Data.push(t);
 					    }
 
-					    var margin = {top: 20, right: 20, bottom: 30, left: 50},
-					    width = 960 - margin.left - margin.right,
-					    height = 500 - margin.top - margin.bottom;
-					    var x = d3.scaleLinear().range([0, width]);
-						var y = d3.scaleLinear().range([height, 0]);
+					    var margin = {top: 10, right: 30, bottom: 30, left: 60},
+					    width = 460 - margin.left - margin.right,
+					    height = 400 - margin.top - margin.bottom;
 
-						var svg = d3.select("#dialog3").append("svg")
-						    .attr("viewBox", `0 0 300 600`)
-							
-						  	.append("g")
-						    .attr("transform",
-						          "translate(" + margin.left + "," + margin.top + ")");
+					    var SVG = d3.select("#dialog3")
+								  	.append("svg")
+								    .attr("viewBox", `0 0 300 600`)
+								  	.append("g")
+								    .attr("transform",
+								          "translate(" + margin.left + "," + margin.top + ")");
 
-						x.domain([0, d3.max(d3Data, function(d) { return d.x; })]);
-  						y.domain([0, d3.max(d3Data, function(d) { return d.y; })]);
-
-  						svg.selectAll(".dot")
-						    .data(d3Data)
-						    .enter().append("circle")
-						    .attr("r", 5)
-						    .attr("cx", function(d) { return x(d.x); })
-						    .attr("cy", function(d) { return y(d.y); });
-
-						var zoom = d3.zoom()
-								      .scaleExtent([.5, 20])  // This control how much you can unzoom (x0.5) and zoom (x20)
-								      .extent([[0, 0], [width, height]])
-								      .on("zoom", updateChart);
-
-						  // Add the X Axis
-						svg.append("g")
-						    .attr("transform", "translate(0," + height + ")").call(zoom)
+						var x = d3.scaleLinear()
+						    .domain([0, d3.max(d3Data, function(d){ return d.x; })])
+						    .range([ 0, width ]);
+						var xAxis = SVG.append("g")
+						    .attr("transform", "translate(0," + height + ")")
 						    .call(d3.axisBottom(x));
-						  // Add the Y Axis
 
-						svg.append("g")
+						  // Add Y axis
+						var y = d3.scaleLinear()
+						    .domain([0, d3.max(d3Data, function(d){ return d.y; })])
+						    .range([ height, 0]);
+						var yAxis = SVG.append("g")
 						    .call(d3.axisLeft(y));
+
+						var clip = SVG.append("defs").append("SVG:clipPath")
+						      .attr("id", "clip")
+						      .append("SVG:rect")
+						      .attr("width", width )
+						      .attr("height", height )
+						      .attr("x", 0)
+						      .attr("y", 0);
+
+						  // Create the scatter variable: where both the circles and the brush take place
+						var scatter = SVG.append('g')
+						    .attr("clip-path", "url(#clip)")
+
+						scatter
+						    .selectAll("circle")
+						    .data(d3Data)
+						    .enter()
+						    .append("circle")
+						      .attr("cx", function (d) { return x(d.x); } )
+						      .attr("cy", function (d) { return y(d.y); } )
+						      .attr("r", 8)
+						      .style("fill", "#61a3a9")
+						      .style("opacity", 0.5)
+
+						  // Set the zoom and Pan features: how much you can zoom, on which part, and what to do when there is a zoom
+						 var zoom = d3.zoom()
+						      .scaleExtent([.5, 20])  // This control how much you can unzoom (x0.5) and zoom (x20)
+						      .extent([[0, 0], [width, height]])
+						      .on("zoom", updateChart);
+
+						SVG.append("rect")
+						      .attr("width", width)
+						      .attr("height", height)
+						      .style("fill", "none")
+						      .style("pointer-events", "all")
+						      .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
+						      .call(zoom);
 
 						function updateChart() {
 
