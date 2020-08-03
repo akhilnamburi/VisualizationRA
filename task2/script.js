@@ -12,23 +12,81 @@
 				complete: displayHTMLTable,
 			}
 		});//parse function end
-    });// submit file click end
+  });// submit file click end
+
+
+  function yAxisFormat(k=1,yAxis,y) 
+  {
+    var tickCount = parseInt(1/k*10); 
+    tickCount = tickCount<=1?1:tickCount;
+    tickCount = tickCount >= 10? 10: tickCount;
+    var ticksList = y.domain().filter((d, i) => i % tickCount === 0); //Choosing a certain number of tick values to display depending on zoom value
+    if (ticksList.length >= 1000 && k <= 2) //Refining the total number of ticks values to be chosen
+    {
+      tickCount = tickCount*3;
+      ticksList = y.domain().filter((d, i) => i % tickCount === 0);
+    }
+    else if(ticksList.length >= 500 && k <= 2){
+      tickCount = tickCount*2;
+      ticksList = y.domain().filter((d, i) => i % tickCount === 0);
+    }
+    var tickSize = (100*(y.bandwidth()+y.paddingInner())/ticksList.length);
+    if (tickSize >= 15) //Deciding the tick size
+    {
+      tickSize = 15;
+    }
+    else if (tickSize >= 11) {
+      tickSize = parseInt(tickSize) + 5;
+    }
+    else if(tickSize >= 3){
+      tickSize = parseInt(tickSize);
+    }
+    else if(tickSize >= 1){
+      tickSize = parseInt(tickSize) + 3;
+    }
+    else if(tickSize*10 >= 5){
+      tickSize = 4;
+    }
+    else if(tickSize*10 >= 3.5){
+      tickSize = 2;
+    }
+    else if (tickSize*10 >= 2) {
+      tickSize = 1.5;
+    }
+    else if (tickSize*10 >= 1.5)  {
+      tickSize = tickSize*10 - 0.9;
+    }
+    else if (tickSize*10 >= 1)  {
+      tickSize = tickSize*10 - 0.3;
+    }
+    else {
+      tickSize = 0.4;
+    }
+    // console.log('Scale: ',k,'|tickCount: ',tickCount,'| value:', ((y.bandwidth()+y.paddingInner())/ticksList.length),'| font-size:',tickSize);
+    var yAxisCall = d3.axisLeft(y)
+                   .tickValues(ticksList); //Passing the array of tick values
+    yAxis.call(yAxisCall); //Adding the axis
+    document.querySelectorAll(".yAxis>.tick") //Passing the font-size
+         .forEach(function(d, i){
+           d.style.fontSize = tickSize +'px';
+         });
+  }
 
  	function displayHTMLTable(results){
  		let jdata = results.data;
  		let jsondata=[];
- 		
+
  		for(let i=0;i<jdata.length;i++){
  			if(jdata[i][2]!= null){
  				jsondata.push(jdata[i]);
  			}
  		}
- 		
+
 		let dataprocess=[];
 		let dataHeader =[];
 		dataHeader = jsondata.splice(0,1).toString().split(",");
 		jsondata.pop();
-		
+
 		let re=/^[0-9,.%]*$/;
 		for(let i=0;i<jsondata.length;i++){
 			for(let j=0;j<jsondata[0].length;j++){
@@ -39,7 +97,7 @@
 				}
 			}
 		}
-		
+
 
 		//column names from csv file
 		let column = []
@@ -48,7 +106,7 @@
 			column.push({ title: dataHeader[i]});
 			csvColumn.push(dataHeader[i]+"("+typeof(dataHeader[i])+")");
 		}
-		
+
 		//Datatable creation using dataprocess array
 		$('#table1').dataTable( {
 			"columnDefs": [{"defaultContent": "-","targets": "_all"}],
@@ -68,22 +126,22 @@
 
 		// populate column names as list
 		let temp = $('<ul class="list-group list-group-flush" id="items1"></ul>');
-    	for (let i = 0; i < dataHeader.length; i++) {       
+    	for (let i = 0; i < dataHeader.length; i++) {
         	temp.append('<div class="item"><li class="list-group-item" id="'+dataHeader[i]+'">'+dataHeader[i]+'</li></div>');
     	}
     	$('#items').html(temp);
-		
+
 		//draggable list
     	$('.item').draggable({
-	        cancel: "a.ui-icon", 
-	        revert: true, 
-	        helper: "clone", 
+	        cancel: "a.ui-icon",
+	        revert: true,
+	        helper: "clone",
 	        cursor: "move",
 			revertDuration: 0 ,
 			containment: $('#board')
 	    });
 
-    	//doppable list columns 
+    	//doppable list columns
     	$('.container').droppable({
 	        accept: "#items1 .item",
 	        activeClass: "ui-state-highlight",
@@ -133,9 +191,9 @@
     	function graph(){
 
     		let chartData = {};
-    		// restrict modal box to right grid 
+    		// restrict modal box to right grid
     		function restrictGraph(id) {
-    		 	
+
 			    $( "#"+id ).dialog({width:200,height:300}).parent().draggable({
 				    containment: '#board'
 				}).resizable({
@@ -169,15 +227,15 @@
 				  });
 			}
     		//draggable modal window
-    		
+
 			if (selectedValue.length<3 && selectedValue.length>0){
-				if (selectedValue.length==1 || (selectedValue[0] == selectedValue[1])){
+				if (selectedValue.length==1 || (selectedValue[0] == selectedValue[1])){ //start of selectionValue==1 / end at 360
 
 					//console.log(selectedValue);
 					for(let i=0;i<jsonFinalData[selectedValue[0]].length;i++){
 					    if (chartData[jsonFinalData[selectedValue[0]][i]]){
 					    	chartData[jsonFinalData[selectedValue[0]][i]] += 1;
-					    } 
+					    }
 					    else{
 					    	chartData[jsonFinalData[selectedValue[0]][i]] = 1;
 					    }
@@ -190,7 +248,7 @@
 						t["key"] = Object.keys(chartData)[i];
 						t["value"] = Object.values(chartData)[i];
 						d3Data.push(t);
-					} 
+					}
 
 					let labelsData = Object.keys(chartData).map(function(key) {
 							return key;
@@ -199,12 +257,10 @@
 						return value;
 					});
 
-					
-					if((selectedValue[0]).toLowerCase() == "country" || (selectedValue[0]).toLowerCase() == "state"){
+
+					if((selectedValue[0]).toLowerCase() == "country" || (selectedValue[0]).toLowerCase() == "state"){ // end at 307
 						let temp1 = $('<div id="dialog1" title="Country"><div id="myDiv"></div></div>');
 						$('#chartdiv').html(temp1);
-
-						
 
 						var margin = {top: 10, right: 10, bottom: 10, left: 10};
                         var width = 960 - margin.left - margin.right;
@@ -234,7 +290,7 @@
 
                         function zoomed() {
                             svg
-                                .selectAll('path') 
+                                .selectAll('path')
                                 .attr('transform', d3.event.transform);
                         }
                         svg.call(zoom);
@@ -301,57 +357,62 @@
                         };
 
 						restrictGraph("dialog1");
-						
-						
-					}else{
-						
-						let temp1 = $('<div id="dialog2" title="'+selectedValue[0]+'"></div>');
-						$('#chartdiv').html(temp1);
-						var margin = {top: 20, right: 20, bottom: 30, left: 40},
-					    width = 960 - margin.left - margin.right,
-					    height = 500 - margin.top - margin.bottom;
 
-					    var svg = d3.select("#dialog2")
-							    .append("svg")
-							    .attr("viewBox", `0 0 300 600`)
-							    .call(d3.zoom().on("zoom", function () {
-								    svg.attr("transform", d3.event.transform)
-								 }))
-							    .append("g")
-							    .attr("transform",
-							          "translate(" + margin.left + "," + margin.top + ")");
 
-					    var y = d3.scaleBand()
-						          .range([height, 0])
-						          .padding(0.1);
+					} 
+          else{
+          	console.log(d3Data);
 
-						var x = d3.scaleLinear()
-						          .range([0, width]);
+					let temp1 = $('<div id="dialog2" title="'+selectedValue[0]+'"></div>'); 
+					$('#chartdiv').html(temp1);
+					var margin = {top: 20, right: 20, bottom: 30, left: 40},
+					width = 960 - margin.left - margin.right,
+					height = 500 - margin.top - margin.bottom;
 
-						d3Data.forEach(function(d) {
-						    d.value = +d.value;
-						  });
+					var y = d3.scaleBand()
+							.range([height, 0])
+							.padding(0.1);
 
-						x.domain([0, d3.max(d3Data, function(d){ return d.value; })])
-  						y.domain(d3Data.map(function(d) { return d.key; }));
+					var x = d3.scaleLinear()
+					.range([0, width]);
 
-  						svg.selectAll(".bar")
-						      .data(d3Data)
-						      .enter().append("rect")
-						      .attr("class", "bar")
-						      .attr("width", function(d) {return x(d.value); } )
-						      .attr("y", function(d) { return y(d.key); })
-						      .attr("height", y.bandwidth());
 
-						svg.append("g")
-						      .attr("transform", "translate(0," + height + ")")
-						      .call(d3.axisBottom(x));
+					d3Data.forEach(function(d) {
+						d.value = +d.value;
+					});
 
-						svg.append("g")
-						      .call(d3.axisLeft(y));
-				    	
-				    	restrictGraph("dialog2");
-						
+					x.domain([0, d3.max(d3Data, function(d){ return d.value; })])
+					y.domain(d3Data.map(function(d) { return d.key; }));
+
+					var svg = d3.select("#dialog2")
+					.append("svg")
+					.attr("viewBox", `0 0 300 600`)
+					.call(d3.zoom().on("zoom", function () {
+					yAxisFormat(d3.event.transform.k,yAxis,y);
+					svg.attr("transform", d3.event.transform)
+					}))
+					.append("g")
+					.attr("transform",
+					"translate(" + margin.left + "," + margin.top + ")");
+
+					svg.selectAll(".bar")
+					  .data(d3Data)
+					  .enter().append("rect")
+					  .attr("class", "bar")
+					  .attr("width", function(d) {return x(d.value); } )
+					  .attr("y", function(d) { return y(d.key); })
+					  .attr("height", y.bandwidth());
+
+					svg.append("g")
+					  .attr("transform", "translate(0," + height + ")")
+					  .call(d3.axisBottom(x));
+
+					yAxis = svg.append("g").attr('class','yAxis');
+					yAxisFormat(1,yAxis,y);
+
+					restrictGraph("dialog2");
+					// svg.append("g")
+					//       .call(d3.axisLeft(y)); //here
 					}
 					d3.select("#c1").selectAll("*").remove();
 					d3.select("#c2").remove();
@@ -359,120 +420,116 @@
 
 				}//end of if for selectedValue==1
 				else{
-	            	//combination of numerical data 
-	            	let finalData=[];
-	            	if (divideData[selectedValue[0]] == "number" && divideData[selectedValue[1]] == "number" ){
-	            		let finalData=[];
-	            		for (let j=0;j<selectedValue.length;j++){
-		            		for(let i=0;i<jsonFinalData[selectedValue[j]].length;i++){
-		            			
-							    if (chartData[jsonFinalData[selectedValue[j]][i]]){
-							    	chartData[jsonFinalData[selectedValue[j]][i]] += 1;
-							    } 
-							    else{
-							    	chartData[jsonFinalData[selectedValue[j]][i]] = 1;
-							    }
+          //combination of numerical data
+						let finalData=[];
+						if (divideData[selectedValue[0]] == "number" && divideData[selectedValue[1]] == "number" ){
+							let finalData=[];
+							for (let j=0;j<selectedValue.length;j++){
+								for(let i=0;i<jsonFinalData[selectedValue[j]].length;i++){
+									if (chartData[jsonFinalData[selectedValue[j]][i]]){
+										chartData[jsonFinalData[selectedValue[j]][i]] += 1;
+									}
+									else{
+										chartData[jsonFinalData[selectedValue[j]][i]] = 1;
+									}
+								}
 							}
-						} 
-						
-		            	let temp1 = $('<div id="dialog3" title="'+selectedValue[0]+' & '+selectedValue[1]+'"></div>');
-						$('#chartdiv').html(temp1);
-	
-					    
-					    let d3Data=[];
-					    for(let i=0;i<jsonFinalData[selectedValue[0]].length;i++){
-					    	let t={};
-					    	t['x']=jsonFinalData[selectedValue[0]][i];
-					    	t['y']=jsonFinalData[selectedValue[1]][i];
-					    	d3Data.push(t);
-					    }
+							let temp1 = $('<div id="dialog3" title="'+selectedValue[0]+' & '+selectedValue[1]+'"></div>');
+							$('#chartdiv').html(temp1);
 
-					    var margin = {top: 10, right: 30, bottom: 30, left: 60},
-					    width = 460 - margin.left - margin.right,
-					    height = 400 - margin.top - margin.bottom;
+							let d3Data=[];
+							for(let i=0;i<jsonFinalData[selectedValue[0]].length;i++){
+								let t={};
+								t['x']=jsonFinalData[selectedValue[0]][i];
+								t['y']=jsonFinalData[selectedValue[1]][i];
+								d3Data.push(t);
+							}
 
-					    var SVG = d3.select("#dialog3")
-								  	.append("svg")
-								    .attr("viewBox", `0 0 300 600`)
-								  	.append("g")
-								    .attr("transform",
-								          "translate(" + margin.left + "," + margin.top + ")");
+							var margin = {top: 10, right: 30, bottom: 30, left: 60},
+							width = 460 - margin.left - margin.right,
+							height = 400 - margin.top - margin.bottom;
 
-						var x = d3.scaleLinear()
-						    .domain([0, d3.max(d3Data, function(d){ return d.x; })])
-						    .range([ 0, width ]);
-						var xAxis = SVG.append("g")
-						    .attr("transform", "translate(0," + height + ")")
-						    .call(d3.axisBottom(x));
+							var SVG = d3.select("#dialog3")
+							  	.append("svg")
+							    .attr("viewBox", `0 0 300 600`)
+							  	.append("g")
+							    .attr("transform",
+							          "translate(" + margin.left + "," + margin.top + ")");
 
-						  // Add Y axis
-						var y = d3.scaleLinear()
-						    .domain([0, d3.max(d3Data, function(d){ return d.y; })])
-						    .range([ height, 0]);
-						var yAxis = SVG.append("g")
-						    .call(d3.axisLeft(y));
+							var x = d3.scaleLinear()
+								.domain([0, d3.max(d3Data, function(d){ return d.x; })])
+								.range([ 0, width ]);
+							var xAxis = SVG.append("g")
+								.attr("transform", "translate(0," + height + ")")
+								.call(d3.axisBottom(x));
 
-						var clip = SVG.append("defs").append("SVG:clipPath")
-						      .attr("id", "clip")
-						      .append("SVG:rect")
-						      .attr("width", width )
-						      .attr("height", height )
-						      .attr("x", 0)
-						      .attr("y", 0);
+							// Add Y axis
+							var y = d3.scaleLinear() // and here
+								.domain([0, d3.max(d3Data, function(d){ return d.y; })])
+								.range([ height, 0]);
+							var yAxis = SVG.append("g")
+							.call(d3.axisLeft(y));
 
-						  // Create the scatter variable: where both the circles and the brush take place
-						var scatter = SVG.append('g')
-						    .attr("clip-path", "url(#clip)")
+							var clip = SVG.append("defs").append("SVG:clipPath")
+							  .attr("id", "clip")
+							  .append("SVG:rect")
+							  .attr("width", width )
+							  .attr("height", height )
+							  .attr("x", 0)
+							  .attr("y", 0);
 
-						scatter
-						    .selectAll("circle")
-						    .data(d3Data)
-						    .enter()
-						    .append("circle")
-						      .attr("cx", function (d) { return x(d.x); } )
-						      .attr("cy", function (d) { return y(d.y); } )
-						      .attr("r", 8)
-						      .style("fill", "#61a3a9")
-						      .style("opacity", 0.5)
+							// Create the scatter variable: where both the circles and the brush take place
+							var scatter = SVG.append('g')
+								.attr("clip-path", "url(#clip)")
 
-						  // Set the zoom and Pan features: how much you can zoom, on which part, and what to do when there is a zoom
-						 var zoom = d3.zoom()
-						      .scaleExtent([.5, 20])  // This control how much you can unzoom (x0.5) and zoom (x20)
-						      .extent([[0, 0], [width, height]])
-						      .on("zoom", updateChart);
+							scatter
+							.selectAll("circle")
+							.data(d3Data)
+							.enter()
+							.append("circle")
+							  .attr("cx", function (d) { return x(d.x); } )
+							  .attr("cy", function (d) { return y(d.y); } )
+							  .attr("r", 8)
+							  .style("fill", "#61a3a9")
+							  .style("opacity", 0.5)
 
-						SVG.append("rect")
-						      .attr("width", width)
-						      .attr("height", height)
-						      .style("fill", "none")
-						      .style("pointer-events", "all")
-						      .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
-						      .call(zoom);
+							// Set the zoom and Pan features: how much you can zoom, on which part, and what to do when there is a zoom
+							var zoom = d3.zoom()
+							  .scaleExtent([.5, 20])  // This control how much you can unzoom (x0.5) and zoom (x20)
+							  .extent([[0, 0], [width, height]])
+							  .on("zoom", updateChart);
 
-						function updateChart() {
+							SVG.append("rect")
+							  .attr("width", width)
+							  .attr("height", height)
+							  .style("fill", "none")
+							  .style("pointer-events", "all")
+							  .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
+							  .call(zoom);
 
-						    // recover the new scale
-						    var newX = d3.event.transform.rescaleX(x);
-						    var newY = d3.event.transform.rescaleY(y);
+							function updateChart() {
+							// recover the new scale
+								var newX = d3.event.transform.rescaleX(x);
+								var newY = d3.event.transform.rescaleY(y);
 
-						    // update axes with these new boundaries
-						    xAxis.call(d3.axisBottom(newX))
-						    yAxis.call(d3.axisLeft(newY))
+								// update axes with these new boundaries
+								xAxis.call(d3.axisBottom(newX))
+								yAxis.call(d3.axisLeft(newY))
+								// update circle position
+								scatter
+								  .selectAll("circle")
+								  .attr('cx', function(d) {return newX(d.x)})
+								  .attr('cy', function(d) {return newY(d.y)});
+							}
 
-						    // update circle position
-						    scatter
-						      .selectAll("circle")
-						      .attr('cx', function(d) {return newX(d.x)})
-						      .attr('cy', function(d) {return newY(d.y)});
-						  }
-					    
-							restrictGraph("dialog3");
-							
+						restrictGraph("dialog3");
+
 					}// both are numerical data
+          // start at 364
 					else if(divideData[selectedValue[0]] != divideData[selectedValue[1]] ){
 						// combination of numerical and categorical data
-	            		
-						
+
+
 						for(let i=0;i<jsonFinalData[selectedValue[0]].length;i++){
 							if(typeof(jsonFinalData[selectedValue[0]][0]) == "string"){
 								if (chartData[jsonFinalData[selectedValue[0]][i]]){
@@ -490,7 +547,7 @@
 									chartData[jsonFinalData[selectedValue[1]][i]] = jsonFinalData[selectedValue[0]][i];
 								}
 							}
-							
+
 						}
 						let d3Data=[];
 
@@ -499,7 +556,7 @@
 							t["key"] = Object.keys(chartData)[i];
 							t["value"] = Object.values(chartData)[i];
 							d3Data.push(t);
-						} 
+						}
 
 						let temp1 = $('<div id="dialog4" title="'+selectedValue[0]+' & '+selectedValue[1]+'"></div>');
 						$('#chartdiv').html(temp1);
@@ -536,18 +593,27 @@
 						      //.attr("x", function(d) { return x(d.sales); })
 						      .attr("width", function(d) {return x(d.value); } )
 						      .attr("y", function(d) { return y(d.key); })
-						      .attr("height", y.bandwidth());
+						      .attr("height", y.bandwidth())
+
+              svg.call(d3.zoom().on("zoom", function () {
+                    yAxisFormat(d3.event.transform.k,yAxis,y);
+                    svg.attr("transform", d3.event.transform)
+                  }));
 
 						svg.append("g")
 						      .attr("transform", "translate(0," + height + ")")
 						      .call(d3.axisBottom(x));
 
 						  // add the y Axis
-						svg.append("g")
-						      .call(d3.axisLeft(y));
+              //change here
+						// svg.append("g")
+						//       .call(d3.axisLeft(y));
+
+            yAxis = svg.append("g").attr('class','yAxis');
+            yAxisFormat(1,yAxis,y);
 
 						restrictGraph("dialog4");
-						
+
 
 
 					}// one is numerical and the other is categorical
@@ -585,7 +651,7 @@
 								n.push(n1);
 							}
 						});
-						
+
 						data = {};
 						data.Nodes = n;
 						data.links = links;
@@ -593,16 +659,16 @@
 						$( function() {
 							$( "#tree" ).dialog();
 						} );
-						
+
 					}//end of else for both columsn are categorical data
 					d3.select("#c1").selectAll("*").remove();
 					d3.select("#c2").remove();
 					count = 2;
-	            }//end of else for selectedValue==2
+	      }//end of else for selectedValue==2
 
 
 			}//end of if condition for selected value <3 & >0
-			
+
 			//right click context menu
 			var CLIPBOARD;
 
@@ -634,7 +700,7 @@
 
 			        selectedValue = $target.text().split('&').map(item=>item.trim());
 			        graph();
-			        
+
 			        // Optionally return false, to prevent closing the menu now
 			    }
 			});//right click context menu
@@ -648,7 +714,7 @@
     		}
     		graph();
     	});// getgraph click function end
-    	
+
 
  	}// displayHTMLTable end
 
