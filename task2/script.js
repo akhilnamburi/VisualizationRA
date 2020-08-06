@@ -14,10 +14,24 @@
 		});//parse function end
   });// submit file click end
 
+function showToolTip(ele,d,x,y) {
+    var toolTip = document.querySelector('.toolTip');
+    toolTip.textContent = d["value"];
+    toolTip.style.display = 'block';
+    toolTip.style.left = x + 10 + 'px';
+    toolTip.style.top = y + 10 + 'px';
+    ele.style.fill = 'orange';
+  }
 
-  function yAxisFormat(k=1,yAxis,y) 
+  function hideToolTip(ele) {
+      var toolTip = document.querySelector('.toolTip');
+      toolTip.style.display = 'none';
+      ele.style.fill = '';
+  }
+
+  function yAxisFormat(k=1,yAxis,y) // IDEA: Zoom code added here
   {
-    var tickCount = parseInt(1/k*10); 
+    var tickCount = parseInt(1/k*10); //Getting the factor against which the number of ticks will be chosen
     tickCount = tickCount<=1?1:tickCount;
     tickCount = tickCount >= 10? 10: tickCount;
     var ticksList = y.domain().filter((d, i) => i % tickCount === 0); //Choosing a certain number of tick values to display depending on zoom value
@@ -70,6 +84,7 @@
          .forEach(function(d, i){
            d.style.fontSize = tickSize +'px';
          });
+    return tickSize;
   }
 
  	function displayHTMLTable(results){
@@ -194,7 +209,7 @@
     		// restrict modal box to right grid
     		function restrictGraph(id) {
 
-			    $( "#"+id ).dialog({width:200,height:300}).parent().draggable({
+			    $( "#"+id ).dialog({width:700,height:500}).parent().draggable({
 				    containment: '#board'
 				}).resizable({
 				    containment: '#board'
@@ -258,8 +273,9 @@
 					});
 
 
-					if((selectedValue[0]).toLowerCase() == "country" || (selectedValue[0]).toLowerCase() == "state"){ // end at 307
-						let temp1 = $('<div id="dialog1" title="Country"><div id="myDiv"></div></div>');
+					if((selectedValue[0]).toLowerCase() == "country" || (selectedValue[0]).toLowerCase() == "state") // end at 307
+          {
+            let temp1 = $('<div id="dialog1" title="Country"><div id="myDiv"></div></div>');
 						$('#chartdiv').html(temp1);
 
 						var margin = {top: 10, right: 10, bottom: 10, left: 10};
@@ -359,60 +375,134 @@
 						restrictGraph("dialog1");
 
 
-					} 
+					} // starts at 203
           else{
-          	console.log(d3Data);
-
-					let temp1 = $('<div id="dialog2" title="'+selectedValue[0]+'"></div>'); 
-					$('#chartdiv').html(temp1);
-					var margin = {top: 20, right: 20, bottom: 30, left: 40},
-					width = 960 - margin.left - margin.right,
-					height = 500 - margin.top - margin.bottom;
-
-					var y = d3.scaleBand()
-							.range([height, 0])
-							.padding(0.1);
-
-					var x = d3.scaleLinear()
-					.range([0, width]);
+            // Numerical Data
+						let temp1 = $('<div id="dialog2" title="'+selectedValue[0]+'"></div>'); // TODO: Insert Semantic Zoom
+						$('#chartdiv').html(temp1);
+						var margin = {top: 20, right: 20, bottom: 30, left: 40},
+					    width = 960 - margin.left - margin.right,
+					    height = 500 - margin.top - margin.bottom;
 
 
-					d3Data.forEach(function(d) {
-						d.value = +d.value;
-					});
+						d3Data.forEach(function(d) {
+						    d.value = +d.value;
+						  });
+            var SVG = d3.select("#dialog2")
+                        .append("svg")
+                        .attr("viewBox", `0 0 300 600`)
+                        .append("g")
+                        .attr("transform",
+                              "translate(" + margin.left + "," + margin.top + ")");
 
-					x.domain([0, d3.max(d3Data, function(d){ return d.value; })])
-					y.domain(d3Data.map(function(d) { return d.key; }));
+            var y = d3.scaleBand()
+            .range([height, 0])
+            .padding(0.1);
 
-					var svg = d3.select("#dialog2")
-					.append("svg")
-					.attr("viewBox", `0 0 300 600`)
-					.call(d3.zoom().on("zoom", function () {
-					yAxisFormat(d3.event.transform.k,yAxis,y);
-					svg.attr("transform", d3.event.transform)
-					}))
-					.append("g")
-					.attr("transform",
-					"translate(" + margin.left + "," + margin.top + ")");
+            var x = d3.scaleLinear()
+            .range([0, width]);
 
-					svg.selectAll(".bar")
-					  .data(d3Data)
-					  .enter().append("rect")
-					  .attr("class", "bar")
-					  .attr("width", function(d) {return x(d.value); } )
-					  .attr("y", function(d) { return y(d.key); })
-					  .attr("height", y.bandwidth());
 
-					svg.append("g")
-					  .attr("transform", "translate(0," + height + ")")
-					  .call(d3.axisBottom(x));
+            x.domain([0, d3.max(d3Data, function(d){ return d.value; })])
+            y.domain(d3Data.map(function(d) { return d.key; }));
 
-					yAxis = svg.append("g").attr('class','yAxis');
-					yAxisFormat(1,yAxis,y);
 
-					restrictGraph("dialog2");
-					// svg.append("g")
-					//       .call(d3.axisLeft(y)); //here
+            var clip = SVG.append("defs").append("SVG:clipPath")
+                  .attr("id", "clip")
+                  .append("SVG:rect")
+                  .attr("width", width )
+                  .attr("height", height )
+                  .attr("x", 0)
+                  .attr("y", 0);
+
+          var bars = SVG.append('g')
+                .attr("clip-path", "url(#clip)")
+
+          var barsLeft =  SVG.append("rect")
+                 .attr("width", width)
+                 .attr('id','barsLeft')
+                 .attr("height", height*2)
+                 .attr("transform", "translate("+ -width +",0)")
+                 .style("fill", "white")
+                 .style("pointer-events", "all");
+
+         var yAxis = SVG.append("g")
+            .attr('class','yAxis')
+            .call(d3.axisLeft(y));
+
+          var barBottom =  SVG.append("rect")
+                .attr("width", width*2)
+                .attr('id','barBottom')
+                .attr("height", height)
+                .attr("transform", "translate("+ -width +"," + height + ")")
+                .style("fill", "white")
+                .style("pointer-events", "all");
+
+          bars.selectAll(".bar")
+				      .data(d3Data)
+				      .enter().append("rect")
+				      .attr("class", "bar")
+				      .attr("width", function(d) {return x(d.value); } )
+				      .attr("y", function(d) { console.log('helloooo');return y(d.key); })
+				      .attr("height", y.bandwidth())
+              .on("mousemove",function(d) {
+                showToolTip(this,d,d3.event.clientX,d3.event.clientY);
+              })
+              .on("mouseout",function(d) {
+                hideToolTip(this);
+              });
+
+          var zoom = d3.zoom()
+               .scaleExtent([.5, 20])  // This control how much you can unzoom (x0.5) and zoom (x20)
+               .extent([[0, 0], [width, height]])
+               .on("zoom", updateChart);
+
+        var xAxis = SVG.append("g")
+           .attr("transform", "translate(0," + height + ")")
+           .call(d3.axisBottom(x));
+
+       SVG.call(zoom);
+
+        yAxisFormat(1,yAxis,y);
+
+         function updateChart(){
+           x.range([0, width*d3.event.transform.k]);
+           xAxis.call(d3.axisBottom(x));
+
+           y.range([height*d3.event.transform.k, 0])
+           yAxis.call(d3.axisLeft(y));
+
+           var transform = {...d3.event.transform};
+           var hightDifference = d3.event.transform.k<1?(height-(height*d3.event.transform.k)):0;
+           if(d3.event.transform.x <= 0 && d3.event.transform.x >= - width*d3.event.transform.k){
+             xAxis.attr("transform","translate("+d3.event.transform.x+"," + height + ")");
+           }
+           else if(d3.event.transform.x > 0){
+             xAxis.attr("transform","translate(0," + height + ")");
+             transform["x"] = 0;
+           }
+           else {
+             xAxis.attr("transform","translate("+ - width*d3.event.transform.k +"," + height + ")");
+             transform["x"] = - width*d3.event.transform.k;
+           }
+
+           if(d3.event.transform.y >= 0 && d3.event.transform.y <= height*d3.event.transform.k){
+             yAxis.attr("transform","translate(0,"+ (d3.event.transform.y + hightDifference) +")");
+           }
+           else if(d3.event.transform.y < 0){
+             yAxis.attr("transform","translate(0,"+ hightDifference +")");
+             transform["y"] = 0;
+           }
+           else {
+             yAxis.attr("transform","translate(0,"+ (height*d3.event.transform.k + hightDifference) +")");
+             transform["y"] = height*d3.event.transform.k;
+           }
+
+           bars.attr("transform","translate("+ transform["x"] +","+ (transform["y"] + hightDifference) +") scale("+d3.event.transform.k+")");
+           yAxisFormat(d3.event.transform.k,yAxis,y);
+         }
+
+				    restrictGraph("dialog2");
 					}
 					d3.select("#c1").selectAll("*").remove();
 					d3.select("#c2").remove();
@@ -421,108 +511,109 @@
 				}//end of if for selectedValue==1
 				else{
           //combination of numerical data
-						let finalData=[];
-						if (divideData[selectedValue[0]] == "number" && divideData[selectedValue[1]] == "number" ){
-							let finalData=[];
-							for (let j=0;j<selectedValue.length;j++){
-								for(let i=0;i<jsonFinalData[selectedValue[j]].length;i++){
-									if (chartData[jsonFinalData[selectedValue[j]][i]]){
-										chartData[jsonFinalData[selectedValue[j]][i]] += 1;
-									}
-									else{
-										chartData[jsonFinalData[selectedValue[j]][i]] = 1;
-									}
-								}
-							}
-							let temp1 = $('<div id="dialog3" title="'+selectedValue[0]+' & '+selectedValue[1]+'"></div>');
-							$('#chartdiv').html(temp1);
+	        let finalData=[];
+        	if (divideData[selectedValue[0]] == "number" && divideData[selectedValue[1]] == "number" ) //end at 469
+          {
+            let finalData=[];
+        		for (let j=0;j<selectedValue.length;j++){
+          		for(let i=0;i<jsonFinalData[selectedValue[j]].length;i++){
+						    if (chartData[jsonFinalData[selectedValue[j]][i]]){
+						    	chartData[jsonFinalData[selectedValue[j]][i]] += 1;
+						    }
+						    else{
+						    	chartData[jsonFinalData[selectedValue[j]][i]] = 1;
+                }
+              }
+            }
+		        let temp1 = $('<div id="dialog3" title="'+selectedValue[0]+' & '+selectedValue[1]+'"></div>');
+						$('#chartdiv').html(temp1);
 
-							let d3Data=[];
-							for(let i=0;i<jsonFinalData[selectedValue[0]].length;i++){
-								let t={};
-								t['x']=jsonFinalData[selectedValue[0]][i];
-								t['y']=jsonFinalData[selectedValue[1]][i];
-								d3Data.push(t);
-							}
+				    let d3Data=[];
+				    for(let i=0;i<jsonFinalData[selectedValue[0]].length;i++){
+				    	let t={};
+				    	t['x']=jsonFinalData[selectedValue[0]][i];
+				    	t['y']=jsonFinalData[selectedValue[1]][i];
+				    	d3Data.push(t);
+				    }
 
-							var margin = {top: 10, right: 30, bottom: 30, left: 60},
-							width = 460 - margin.left - margin.right,
-							height = 400 - margin.top - margin.bottom;
+				    var margin = {top: 10, right: 30, bottom: 30, left: 60},
+				    width = 460 - margin.left - margin.right,
+				    height = 400 - margin.top - margin.bottom;
 
-							var SVG = d3.select("#dialog3")
+				    var SVG = d3.select("#dialog3")
 							  	.append("svg")
 							    .attr("viewBox", `0 0 300 600`)
 							  	.append("g")
 							    .attr("transform",
 							          "translate(" + margin.left + "," + margin.top + ")");
 
-							var x = d3.scaleLinear()
-								.domain([0, d3.max(d3Data, function(d){ return d.x; })])
-								.range([ 0, width ]);
-							var xAxis = SVG.append("g")
-								.attr("transform", "translate(0," + height + ")")
-								.call(d3.axisBottom(x));
+						var x = d3.scaleLinear()
+						    .domain([0, d3.max(d3Data, function(d){ return d.x; })])
+						    .range([ 0, width ]);
+						var xAxis = SVG.append("g")
+						    .attr("transform", "translate(0," + height + ")")
+						    .call(d3.axisBottom(x));
 
-							// Add Y axis
-							var y = d3.scaleLinear() // and here
-								.domain([0, d3.max(d3Data, function(d){ return d.y; })])
-								.range([ height, 0]);
-							var yAxis = SVG.append("g")
-							.call(d3.axisLeft(y));
+						  // Add Y axis
+						var y = d3.scaleLinear() // and here
+						    .domain([0, d3.max(d3Data, function(d){ return d.y; })])
+						    .range([ height, 0]);
+						var yAxis = SVG.append("g")
+						    .call(d3.axisLeft(y));
 
-							var clip = SVG.append("defs").append("SVG:clipPath")
-							  .attr("id", "clip")
-							  .append("SVG:rect")
-							  .attr("width", width )
-							  .attr("height", height )
-							  .attr("x", 0)
-							  .attr("y", 0);
+						var clip = SVG.append("defs").append("SVG:clipPath")
+						      .attr("id", "clip")
+						      .append("SVG:rect")
+						      .attr("width", width )
+						      .attr("height", height )
+						      .attr("x", 0)
+						      .attr("y", 0);
 
-							// Create the scatter variable: where both the circles and the brush take place
-							var scatter = SVG.append('g')
-								.attr("clip-path", "url(#clip)")
+						  // Create the scatter variable: where both the circles and the brush take place
+						var scatter = SVG.append('g')
+						    .attr("clip-path", "url(#clip)")
 
-							scatter
-							.selectAll("circle")
-							.data(d3Data)
-							.enter()
-							.append("circle")
-							  .attr("cx", function (d) { return x(d.x); } )
-							  .attr("cy", function (d) { return y(d.y); } )
-							  .attr("r", 8)
-							  .style("fill", "#61a3a9")
-							  .style("opacity", 0.5)
+						scatter
+						    .selectAll("circle")
+						    .data(d3Data)
+						    .enter()
+						    .append("circle")
+						      .attr("cx", function (d) { return x(d.x); } )
+						      .attr("cy", function (d) { return y(d.y); } )
+						      .attr("r", 8)
+						      .style("fill", "#61a3a9")
+						      .style("opacity", 0.5)
 
-							// Set the zoom and Pan features: how much you can zoom, on which part, and what to do when there is a zoom
-							var zoom = d3.zoom()
-							  .scaleExtent([.5, 20])  // This control how much you can unzoom (x0.5) and zoom (x20)
-							  .extent([[0, 0], [width, height]])
-							  .on("zoom", updateChart);
+						  // Set the zoom and Pan features: how much you can zoom, on which part, and what to do when there is a zoom
+						 var zoom = d3.zoom()
+						      .scaleExtent([.5, 20])  // This control how much you can unzoom (x0.5) and zoom (x20)
+						      .extent([[0, 0], [width, height]])
+						      .on("zoom", updateChart);
 
-							SVG.append("rect")
-							  .attr("width", width)
-							  .attr("height", height)
-							  .style("fill", "none")
-							  .style("pointer-events", "all")
-							  .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
-							  .call(zoom);
+						SVG.append("rect")
+						      .attr("width", width)
+						      .attr("height", height)
+						      .style("fill", "none")
+						      .style("pointer-events", "all")
+						      .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
+						      .call(zoom);
 
-							function updateChart() {
-							// recover the new scale
-								var newX = d3.event.transform.rescaleX(x);
-								var newY = d3.event.transform.rescaleY(y);
+						function updateChart() {
+						    // recover the new scale
+						    var newX = d3.event.transform.rescaleX(x);
+						    var newY = d3.event.transform.rescaleY(y);
 
-								// update axes with these new boundaries
-								xAxis.call(d3.axisBottom(newX))
-								yAxis.call(d3.axisLeft(newY))
-								// update circle position
-								scatter
-								  .selectAll("circle")
-								  .attr('cx', function(d) {return newX(d.x)})
-								  .attr('cy', function(d) {return newY(d.y)});
-							}
+						    // update axes with these new boundaries
+						    xAxis.call(d3.axisBottom(newX))
+						    yAxis.call(d3.axisLeft(newY))
+						    // update circle position
+						    scatter
+						      .selectAll("circle")
+						      .attr('cx', function(d) {return newX(d.x)})
+						      .attr('cy', function(d) {return newY(d.y)});
+						  }
 
-						restrictGraph("dialog3");
+							restrictGraph("dialog3");
 
 					}// both are numerical data
           // start at 364
@@ -565,54 +656,121 @@
 					    width = 960 - margin.left - margin.right,
 					    height = 500 - margin.top - margin.bottom;
 
-					    var svg = d3.select("#dialog4")
-							  .append("svg")
-							    .attr("viewBox", `0 0 300 600`)
-							  .append("g")
-							    .attr("transform",
-							          "translate(" + margin.left + "," + margin.top + ")");
+					    var SVG = d3.select("#dialog4")
+                        .append("svg")
+                        .attr("viewBox", `0 0 300 600`)
+                        .append("g")
+                        .attr("transform",
+                              "translate(" + margin.left + "," + margin.top + ")");
 
-					    var y = d3.scaleBand()
-						          .range([height, 0])
-						          .padding(0.1);
+            var y = d3.scaleBand()
+            .range([height, 0])
+            .padding(0.1);
 
-						var x = d3.scaleLinear()
-						          .range([0, width]);
+            var x = d3.scaleLinear()
+            .range([0, width]);
 
-						d3Data.forEach(function(d) {
-						    d.value = +d.value;
-						  });
 
-						x.domain([0, d3.max(d3Data, function(d){ return d.value; })])
-  						y.domain(d3Data.map(function(d) { return d.key; }));
+            x.domain([0, d3.max(d3Data, function(d){ return d.value; })])
+            y.domain(d3Data.map(function(d) { return d.key; }));
 
-  						svg.selectAll(".bar")
-						      .data(d3Data)
-						    .enter().append("rect")
-						      .attr("class", "bar")
-						      //.attr("x", function(d) { return x(d.sales); })
-						      .attr("width", function(d) {return x(d.value); } )
-						      .attr("y", function(d) { return y(d.key); })
-						      .attr("height", y.bandwidth())
 
-              svg.call(d3.zoom().on("zoom", function () {
-                    yAxisFormat(d3.event.transform.k,yAxis,y);
-                    svg.attr("transform", d3.event.transform)
-                  }));
+            var clip = SVG.append("defs").append("SVG:clipPath")
+                  .attr("id", "clip")
+                  .append("SVG:rect")
+                  .attr("width", width )
+                  .attr("height", height )
+                  .attr("x", 0)
+                  .attr("y", 0);
 
-						svg.append("g")
-						      .attr("transform", "translate(0," + height + ")")
-						      .call(d3.axisBottom(x));
+          var bars = SVG.append('g')
+                .attr("clip-path", "url(#clip)")
 
-						  // add the y Axis
-              //change here
-						// svg.append("g")
-						//       .call(d3.axisLeft(y));
+          var barsLeft =  SVG.append("rect")
+                 .attr("width", width)
+                 .attr('id','barsLeft')
+                 .attr("height", height*2)
+                 .attr("transform", "translate("+ -width +",0)")
+                 .style("fill", "white")
+                 .style("pointer-events", "all");
 
-            yAxis = svg.append("g").attr('class','yAxis');
-            yAxisFormat(1,yAxis,y);
+         var yAxis = SVG.append("g")
+            .attr('class','yAxis')
+            .call(d3.axisLeft(y));
 
-						restrictGraph("dialog4");
+          var barBottom =  SVG.append("rect")
+                .attr("width", width*2)
+                .attr('id','barBottom')
+                .attr("height", height)
+                .attr("transform", "translate("+ -width +"," + height + ")")
+                .style("fill", "white")
+                .style("pointer-events", "all");
+
+          bars.selectAll(".bar")
+              .data(d3Data)
+              .enter().append("rect")
+              .attr("class", "bar")
+              .attr("width", function(d) {return x(d.value); } )
+              .attr("y", function(d) { return y(d.key); })
+              .attr("height", y.bandwidth())
+              .on("mousemove",function(d) {
+                showToolTip(this,d,d3.event.clientX,d3.event.clientY);
+              })
+              .on("mouseout",function(d) {
+                hideToolTip(this);
+              });
+
+          var zoom = d3.zoom()
+               .scaleExtent([.5, 20])  // This control how much you can unzoom (x0.5) and zoom (x20)
+               .extent([[0, 0], [width, height]])
+               .on("zoom", updateChart);
+
+        var xAxis = SVG.append("g")
+           .attr("transform", "translate(0," + height + ")")
+           .call(d3.axisBottom(x));
+
+       SVG.call(zoom);
+
+        yAxisFormat(1,yAxis,y);
+
+         function updateChart(){
+           x.range([0, width*d3.event.transform.k]);
+           xAxis.call(d3.axisBottom(x));
+
+           y.range([height*d3.event.transform.k, 0])
+           yAxis.call(d3.axisLeft(y));
+
+           var transform = {...d3.event.transform};
+           var hightDifference = d3.event.transform.k<1?(height-(height*d3.event.transform.k)):0;
+           if(d3.event.transform.x <= 0 && d3.event.transform.x >= - width*d3.event.transform.k){
+             xAxis.attr("transform","translate("+d3.event.transform.x+"," + height + ")");
+           }
+           else if(d3.event.transform.x > 0){
+             xAxis.attr("transform","translate(0," + height + ")");
+             transform["x"] = 0;
+           }
+           else {
+             xAxis.attr("transform","translate("+ - width*d3.event.transform.k +"," + height + ")");
+             transform["x"] = - width*d3.event.transform.k;
+           }
+
+           if(d3.event.transform.y >= 0 && d3.event.transform.y <= height*d3.event.transform.k){
+             yAxis.attr("transform","translate(0,"+ (d3.event.transform.y + hightDifference) +")");
+           }
+           else if(d3.event.transform.y < 0){
+             yAxis.attr("transform","translate(0,"+ hightDifference +")");
+             transform["y"] = 0;
+           }
+           else {
+             yAxis.attr("transform","translate(0,"+ (height*d3.event.transform.k + hightDifference) +")");
+             transform["y"] = height*d3.event.transform.k;
+           }
+
+           bars.attr("transform","translate("+ transform["x"] +","+ (transform["y"] + hightDifference) +") scale("+d3.event.transform.k+")");
+           yAxisFormat(d3.event.transform.k,yAxis,y);
+         }
+
+            restrictGraph("dialog4");
 
 
 
