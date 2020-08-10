@@ -12,6 +12,7 @@ const parseXML = async (data) => {
       id: i + 1
     }
   })
+
   const arr = [];
   pairs.map(x => x.map(y => arr.push(y)))
 

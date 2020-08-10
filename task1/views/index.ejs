@@ -51,12 +51,15 @@
         <input type="button" value="Display Bubble Map" class="bubble-map-button" disabled>
       </div>
     </div>
+    <svg id="line-canvas" width="100%">
+      <g></g>
+    </svg>
     <div class="right" id="board">
-      <div class="all-data-box note the-node custom-data">
+      <div class="all-data-box note the-node custom-data" data-dialog="graph">
         <div class='close_note'>X</div>
         <h3>Graph Header</h3>
         <div class="all-data-wrapper">
-          <p class="all-data" style="cursor:default;"></p>
+          <p class="all-data"></p>
         </div>
       </div>
       <div class="matrix-data-box note the-node custom-data">
@@ -65,11 +68,11 @@
         <p class="matrix-data"></p>
       </div>
 
-      <div class="bubblemap-box note the-node custom-data">
+      <div class="bubblemap-box note the-node custom-data" data-dialog="bubble-map">
         <div class='close_note'>X</div>
         <h3>Bubble Map Header</h3>
         <div class="bubblemap-wrapper">
-          <p class="bubblemap" style="cursor:default;">
+          <p class="bubblemap">
             <span class="loading-text">Please wait while data is being fetched...</span>
             <svg id="bubbleMap" width="630" height="350"></svg>
           </p>
@@ -98,7 +101,54 @@
 
     <script>
       var bubbleMapSVG = d3.select("#bubbleMap");
-      var projection;
+      var projection, personsCollection = [];
+
+      var lineCanvas = document.getElementById('line-canvas');
+      var globalG = lineCanvas.childNodes[1];
+
+      let pObj, connections = [];
+
+      var foreign = document.createElementNS('http://www.w3.org/2000/svg',"foreignObject");
+      foreign.setAttribute('width', '85%');
+      foreign.setAttribute('height', '100vh');
+      foreign.setAttribute('id', 'boardG');
+      foreign.appendChild(document.getElementById('board'));
+      globalG.appendChild(foreign);
+
+      let positions = {
+        'graph' : {
+            x : 0,
+            y : 0
+        },
+        'bubble-map':{
+            x : 0,
+            y : 0
+        }
+      }
+
+      const accessor = {
+        x1 : function (d) {
+          return positions[d.source.id].x + d.source.xOffset
+        },
+        y1 : function (d) {
+            return positions[d.source.id].y + d.source.yOffset
+        },
+        x2 : function (d) {
+            return positions[d.target.id].x + d.target.xOffset
+        },
+        y2 : function (d) {
+            return positions[d.target.id].y + d.target.yOffset
+        }
+      }
+
+      function lineFunc(d){
+        let data = [[accessor.x1(d), accessor.y1(d)],
+            [accessor.x2(d), accessor.y2(d)]];
+        // if(d.source.id === 'bubble-map' && d.target.id === 'graph'){
+        //     data[1] =  [((accessor.x2(d) +accessor.x2(d))/2 ),(accessor.y1(d) + accessor.y2(d))/2]
+        // }
+        return d3.line().curve(d3.curveBasis)(data);
+      }
 
       function drawBubbleMap() {
         width = +bubbleMapSVG.attr("width"),
@@ -151,16 +201,102 @@
               .attr("stroke", function(d){ if(d.n>2000){return "black"}else{return "none"}  })
               .attr("stroke-width", 1)
               .attr("fill-opacity", .4)
+              .attr("data-name", function (d) {
+                return d.name;
+              })
+              .on("click", mapClick);
+          
+              $('.bubblemap-box').on('drag',reDrawLines);
+              $('.all-data-box').on('drag',reDrawLines);
 
         document.querySelector('.loading-text').style.display = 'none';  
       }
-    </script>
 
-    <script type="text/javascript">
+      function reDrawLines() {
+        if (lineDataCollection.length > 0) {
+          lineDataCollection = [];
+          connections.forEach(function(ele) {
+            computeLineCoordinates(ele, personsCollection);
+          });
+          drawPolyLine();
+        }
+      }
+
+      function mapClick() {
+        if(this.nodeName === 'circle') {
+          connections.push(this);
+          computeLineCoordinates(this, personsCollection);
+        } else {
+          if(connections.length > 0) {
+            const ele = connections[0];
+              computeLineCoordinates(ele, personsCollection);
+            }
+          }
+        drawPolyLine();
+      }
+
+      let lineDataCollection = [];
+
+      function computeLineCoordinates(ele, personsCollection) {
+        positions = {
+          'bubble-map':{
+              x : 0,
+              y : 0
+          },
+          'graph' : {
+              x : 0,
+              y : 0
+          }
+        }
+
+        const personIndex = personsCollection.indexOf($(ele).attr('data-name'));
+        let x1Loc = parseFloat($('.bubblemap-box').css('left').split('px')[0]) + ele.getBBox().x + ele.getBBox().width;
+        let y1Loc = parseFloat($('.bubblemap-box').css('top').split('px')[0]) + ele.getBBox().y + (ele.getBBox().height/2) + 37;
+
+        let x2Loc = d3.select('[data-name=person' + personIndex + ']').attr('transform').split('(')[1];
+        x2Loc = parseFloat(x2Loc.split(',')[0]);
+        x2Loc = ((280*x2Loc)/1920) + parseFloat($('.all-data-box').css('left').split('px')[0]);
+        
+        let y2Loc = d3.select('[data-name=person' + personIndex + ']').attr('transform').split(')')[0];
+        y2Loc = parseFloat(y2Loc.split(',')[1]);
+        y2Loc = ((275*y2Loc)/1920) + 36 + parseFloat($('.all-data-box').css('top').split('px')[0]);
+
+        // let x2Loc = $('[data-name=person' + personIndex + ']').offset().left;
+        // let y2Loc = $('[data-name=person' + personIndex + ']').offset().top;
+
+        lineDataCollection.push({
+          source : {
+            id: "bubble-map",
+            xOffset : x1Loc,
+            yOffset : y1Loc
+          },
+          target : {
+            id: "graph",
+            xOffset : x2Loc,
+            yOffset : y2Loc
+          }
+        });
+      }
+
+      function drawPolyLine() {
+        const linkUpdate = d3.select('#line-canvas').selectAll('.link-new')
+          .data(lineDataCollection)
+
+          linkUpdate.enter()
+          .append('path')
+              .attr('class', 'link-new')
+              .merge(linkUpdate)
+          .attr('d',lineFunc)
+          .style('stroke', '#95c7f4')
+          .style('stroke-dasharray', '3,1.5')
+          .style('stroke-width', 2)
+          .style('fill', 'none').raise();
+      }
+
       function processMatrix() {
         var colors = d3.scaleOrdinal(d3.schemeCategory10);
 
-        var svg = d3.select("svg"),
+        var svg = d3.select(".all-data svg"),
           width = +svg.attr("width"),
           height = +svg.attr("height"),
           node,
@@ -188,6 +324,11 @@
 
         d3.json("graph.json", function (error, graph) {
           if (error) throw error;
+          
+          graph.nodes.forEach(node => {
+            personsCollection.push(node.name);
+          });
+
           const nodesValue = graph.nodes.map((x) => x.name);
           const nameLinks = graph.links.map((x) => {
             return {
@@ -305,13 +446,18 @@
           .data(nodes)
           .enter()
           .append("g")
-          .attr("class", "node");
+          .attr("class", "node")
+          .attr('data-name', function(d, i) {
+            return 'person' + i;
+          });
         // .call(d3.drag().on("start", dragstarted).on("drag", dragged));
 
         node
           .append("circle")
           .attr("r", 5)
-          .style("fill:blue");
+          .style("fill", function (d, i) {
+            return colors(i);
+          });
 
         node.append("title").text(function (d) {
           return d.connection;
@@ -388,8 +534,7 @@
           }
         });
       }
-    </script>
-    <script>
+
       window.oncontextmenu = function(event) {
         event.preventDefault();
         return false;
@@ -518,6 +663,12 @@
           } else {
             $(this).parent().detach();
           }
+
+          lineDataCollection = [];
+          connections = [];
+          document.querySelectorAll('.link-new').forEach(ele => {
+            ele.remove();
+          });
         });
       
         document.querySelector('.matrix-button').addEventListener('click', function() {
@@ -530,11 +681,15 @@
           document.querySelector('.right .all-data-box').style.display = 'block';
           $('.note').css('z-index', 9);
           document.querySelector('.right .all-data-box').style.zIndex = 99;
-          panzoom(document.querySelector('.all-data'), {
+          pObj = panzoom(document.querySelector('.all-data'), {
             beforeMouseDown: function(e) {
               var shouldIgnore = !e.altKey;
               return shouldIgnore;
             }
+          });
+
+          pObj.on('zoom', function(e) {
+            console.log(e.getTransform());
           });
         });
 
@@ -550,7 +705,7 @@
             }
           });
         });
-      
+
         function getAllData() {
           var xhttp = new XMLHttpRequest();
           xhttp.onreadystatechange = function() {
@@ -594,6 +749,39 @@
         $( ".note.all-data-box" ).resizable();
         $( ".note.bubblemap-box" ).resizable();
       });
+
+
+      // const coord = lineCanvas.createSVGPoint().matrixTransform(this.getScreenCTM().inverse())
+        // const source = {
+        //   x: (-coord.x) - this.getBBox().x + this.getBBox().width,
+        //   y: (-coord.y) + this.getBBox().y + this.getBBox().height
+        // };
+
+        // const personIndex = personsCollection.indexOf(this.getAttribute('data-name'));
+        // const targetElement = document.querySelector('[data-name=person' + personIndex + ']');
+
+        // const coord2 = lineCanvas.createSVGPoint().matrixTransform(targetElement.getScreenCTM().inverse())
+        // const target = {
+        //   x: targetElement.getBoundingClientRect().left - 230,
+        //   y: targetElement.getBoundingClientRect().top
+        // }
+
+        // var c = document.getElementById("line-canvas");
+        // var ctx = c.getContext("2d");
+        // ctx.beginPath();
+        // ctx.moveTo(source.x, target.x);
+        // ctx.lineTo(source.y, target.y);
+        // ctx.strokeStyle = "red";
+        // ctx.stroke();
+        // var newLine = document.createElementNS('http://www.w3.org/2000/svg','line');
+        // newLine.setAttribute('id','line1');
+        // newLine.setAttribute('x1',source.x);
+        // newLine.setAttribute('y1',source.y);
+        // newLine.setAttribute('x2',target.x);
+        // newLine.setAttribute('y2',target.y);
+        // newLine.setAttribute("stroke", "yellow");
+        // newLine.setAttribute("stroke-width", 6);
+        // c.appendChild(newLine);
     </script>
   </body>
 </html>

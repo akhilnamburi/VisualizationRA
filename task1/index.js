@@ -20,7 +20,7 @@ const xmlRead = require('read-xml');
 const NodeGeocoder = require('node-geocoder');
 const options = {
   provider: 'google',
-  apiKey: 'AIzaSyBFte7gk7AkuitEPovpnMEqbQUF8RKJktY'
+  apiKey: 'AIzaSyBliQCe7bPGd8UoHIIk9uwmLnGrvf9rprE'
 };
 const geocoder = NodeGeocoder(options);
 const ObjectsToCsv = require('objects-to-csv');
@@ -267,6 +267,7 @@ const CONTINENTS = {
 }
 
 let locationCollection = [], mapDataCollection = [];
+let outputData = [];
 
 async function readFiles(dirname, onFileContent, onError) {
   filenames = fs.readdirSync(dirname);
@@ -324,18 +325,35 @@ app.get("/getBubbleMapData", (req, res) => {
 function fetchLocations(res) {
   xmlRead.readXML(txtData, function(err, data) {
     const ast = XmlReader.parseSync(data.content);
-    const locationCollectionObj = xmlQuery(ast).find('Location').children().ast;
+    const documentCollection = xmlQuery(ast).children().ast;
 
-    locationCollectionObj.forEach(loc => {
-      locationCollection.push(loc.value);
+    documentCollection.forEach(document => {
+      // locationCollection.push(loc.value);
+      let obj = {};
+      document.children.forEach(ele => {
+        if(ele.name === 'Person') {
+          obj = {};
+          obj.name = ele.children[0].value;
+        }
+
+        if(ele.name === 'Location') {
+          if(obj.name) {
+            let val = ele.children[0].value;
+            outputData.push({
+              name: obj.name,
+              location: val
+            });
+          }
+        }
+      });
     });
 
-    fetchMapData(0, locationCollection.length, res);
+    fetchMapData(0, outputData.length, res);
   });
 }
 
 function fetchMapData(counter, len, res) {
-  const geoRequest = geocoder.geocode({ 'address': locationCollection[counter] });
+  const geoRequest = geocoder.geocode({ 'address': outputData[counter].location });
   
   setTimeout(() => {
     geoRequest.then(r => {
@@ -345,12 +363,14 @@ function fetchMapData(counter, len, res) {
           lat: data.latitude,
           lng: data.longitude,
           continent: CONTINENTS[data.countryCode],
-          n: 1
+          n: 1,
+          name: outputData[counter].name
         });
       }
 
       if(counter + 2 < len) {
-        fetchMapData(counter + 1, len)
+        fetchMapData(counter + 1, len);
+        console.log('Processing...');
       } else {
         const csv = new ObjectsToCsv(mapDataCollection);
         csv.toDisk('./views/map-data.csv');
