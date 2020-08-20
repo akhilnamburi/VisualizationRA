@@ -230,8 +230,8 @@
               })
               .on("mouseup", mapClick);
           
-              $('.bubblemap-box').on('drag',reDrawLines);
-              $('.all-data-box').on('drag',reDrawLines);
+              $('.bubblemap-box').on('drag', reDrawLines);
+              $('.all-data-box').on('drag', reDrawLines2);
 
         document.querySelector('.loading-text').style.display = 'none';  
       }
@@ -240,9 +240,71 @@
         if (lineDataCollection.length > 0) {
           lineDataCollection = [];
           connections.forEach(function(ele) {
-            computeLineCoordinates(ele, personsCollection);
+            computeLineCoordinates(ele, personsCollection, 'person');
           });
           drawPolyLine();
+        }
+
+        bubbleToTextCollection = [];
+        connections2.forEach(conn => {
+          const ele = conn.source;
+          let x1Loc = parseFloat($('.' + this.classList[0]).css('left').split('px')[0]) + ele.getBBox().x + ele.getBBox().width;
+          let y1Loc = parseFloat($('.' + this.classList[0]).css('top').split('px')[0]) + ele.getBBox().y + (ele.getBBox().height/2) + 37;
+
+          let x2Loc = parseFloat(conn.target.css('left').split('px')[0]) + conn.target.find('.highlighted-text').position().left;
+          let y2Loc = parseFloat(conn.target.css('top').split('px')[0]) + conn.target.find('.highlighted-text').position().top;
+
+          bubbleToTextCollection.push({
+            source : {
+              id: "bubble-map",
+              xOffset : x1Loc,
+              yOffset : y1Loc
+            },
+            target : {
+              id: "highlight-text",
+              xOffset : x2Loc,
+              yOffset : y2Loc
+            }
+          });
+        });
+
+        if(bubbleToTextCollection.length > 0) {
+          drawPolyLine2(bubbleToTextCollection);
+        }
+      }
+
+      function reDrawLines2() {
+        bubbleToTextCollection = [];
+        connections2.forEach(conn => {
+          const ele = conn.source;
+
+          let x1Loc = d3.select(ele.parentElement).attr('transform').split('(')[1];
+          x1Loc = parseFloat(x1Loc.split(',')[0]);
+          x1Loc = (x1Loc/2 - 90) + ($('.all-data-box').css('left') ? parseFloat($('.all-data-box').css('left').split('px')[0]) : 0);
+          
+          let y1Loc = d3.select(ele.parentElement).attr('transform').split(')')[0];
+          y1Loc = parseFloat(y1Loc.split(',')[1]);
+          y1Loc = (y1Loc/2 - 18) + ($('.all-data-box').css('top') ? parseFloat($('.all-data-box').css('top').split('px')[0]) : 0);
+
+          let x2Loc = parseFloat(conn.target.css('left').split('px')[0]) + conn.target.find('.highlighted-text').position().left;
+          let y2Loc = parseFloat(conn.target.css('top').split('px')[0]) + conn.target.find('.highlighted-text').position().top + 5;
+
+          bubbleToTextCollection.push({
+            source : {
+              id: "bubble-map",
+              xOffset : x1Loc,
+              yOffset : y1Loc
+            },
+            target : {
+              id: "highlight-text",
+              xOffset : x2Loc,
+              yOffset : y2Loc
+            }
+          });
+        })
+
+        if(bubbleToTextCollection.length > 0) {
+          drawPolyLine2(bubbleToTextCollection);
         }
       }
 
@@ -320,7 +382,7 @@
 
               connections2.push({ source: ele, target: $('#' + id) });
 
-              drawPolyLine(bubbleToTextCollection);
+              drawPolyLine2(bubbleToTextCollection);
 
               $('#' + id).on('drag', function() {
                 bubbleToTextCollection = [];
@@ -345,7 +407,7 @@
                     }
                   });
                 })
-                drawPolyLine(bubbleToTextCollection);
+                drawPolyLine2(bubbleToTextCollection);
               });
             });
           } else {
@@ -358,7 +420,7 @@
                   computeLineCoordinates(ele, personsCollection, 'person');
                 }
               }
-            drawPolyLine();
+            drawPolyLine(lineDataCollection);
           }
         }
       }
@@ -387,11 +449,11 @@
 
           let x2Loc = d3.select('[data-name=person' + personIndex + ']').attr('transform').split('(')[1];
           x2Loc = parseFloat(x2Loc.split(',')[0]);
-          x2Loc = ((280*x2Loc)/1920) + parseFloat($('.all-data-box').css('left').split('px')[0]);
+          x2Loc = (x2Loc/2 - 90) + parseFloat($('.all-data-box').css('left').split('px')[0]);
           
           let y2Loc = d3.select('[data-name=person' + personIndex + ']').attr('transform').split(')')[0];
           y2Loc = parseFloat(y2Loc.split(',')[1]);
-          y2Loc = ((275*y2Loc)/1920) + 36 + parseFloat($('.all-data-box').css('top').split('px')[0]);
+          y2Loc = (y2Loc/2 - 18) + parseFloat($('.all-data-box').css('top').split('px')[0]);
 
           lineDataCollection.push({
             source : {
@@ -423,11 +485,11 @@
 
           let x1Loc = d3.select(ele).attr('transform').split('(')[1];
           x1Loc = parseFloat(x1Loc.split(',')[0]);
-          x1Loc = ((280*x1Loc)/1920) + parseFloat($('.all-data-box').css('left').split('px')[0]);
+          x1Loc = (x1Loc/2 - 90) + $('.all-data-box').css('left') ? parseFloat($('.all-data-box').css('left').split('px')[0]) : 0;
           
           let y1Loc = d3.select(ele).attr('transform').split(')')[0];
           y1Loc = parseFloat(y1Loc.split(',')[1]);
-          y1Loc = ((275*y1Loc)/1920) + 36 + parseFloat($('.all-data-box').css('top').split('px')[0]);
+          y1Loc = (y1Loc/2 - 18) + $('.all-data-box').css('top') ? parseFloat($('.all-data-box').css('top').split('px')[0]) : 0;
 
           let cir = ele.querySelector('circle');
           let nodeName = cir.getAttribute('data-name');
@@ -463,6 +525,21 @@
           linkUpdate.enter()
           .append('path')
               .attr('class', 'link-new')
+              .merge(linkUpdate)
+          .attr('d',lineFunc)
+          .style('stroke', '#95c7f4')
+          .style('stroke-dasharray', '3,1.5')
+          .style('stroke-width', 2)
+          .style('fill', 'none').raise();
+      }
+
+      function drawPolyLine2(collection) {
+        const linkUpdate = d3.select('#line-canvas').selectAll('.link-new1')
+          .data(collection)
+
+          linkUpdate.enter()
+          .append('path')
+              .attr('class', 'link-new1')
               .merge(linkUpdate)
           .attr('d',lineFunc)
           .style('stroke', '#95c7f4')
@@ -656,6 +733,7 @@
         simulation.nodes(nodes).on("tick", ticked);
 
         simulation.force("link").links(links);
+        $('.all-data-box').on('drag', reDrawLines2);
       }
 
       function graphConnector() {
@@ -710,16 +788,16 @@
                     docEle.style = 'fill: red !important';
                   });
 
-                  let x1Loc = parseFloat($('.all-data-box').css('left') ? 
-                    $('.all-data-box').css('left').split('px')[0] : 0) + document.querySelector('.all-data-wrapper').scrollLeft -
-                    document.querySelector('.all-data-box').getBoundingClientRect().left;
-
-                  let y1Loc = parseFloat($('.all-data-box').css('top') ? 
-                    $('.all-data-box').css('top').split('px')[0] : 0) + document.querySelector('.all-data-wrapper').scrollTop -
-                    document.querySelector('.all-data-box').getBoundingClientRect().top;
+                  let x1Loc = d3.select(ele.parentElement).attr('transform').split('(')[1];
+                  x1Loc = parseFloat(x1Loc.split(',')[0]);
+                  x1Loc = (x1Loc/2 - 90) + ($('.all-data-box').css('left') ? parseFloat($('.all-data-box').css('left').split('px')[0]) : 0);
+                  
+                  let y1Loc = d3.select(ele.parentElement).attr('transform').split(')')[0];
+                  y1Loc = parseFloat(y1Loc.split(',')[1]);
+                  y1Loc = (y1Loc/2 - 18) + ($('.all-data-box').css('top') ? parseFloat($('.all-data-box').css('top').split('px')[0]) : 0);
 
                   let x2Loc = parseFloat($('#' + id).css('left').split('px')[0]) + $('#' + id).find('.highlighted-text').position().left;
-                  let y2Loc = parseFloat($('#' + id).css('top').split('px')[0]) + $('#' + id).find('.highlighted-text').position().top + 5;
+                  let y2Loc = parseFloat($('#' + id).css('top').split('px')[0]) + $('#' + id).find('.highlighted-text').position().top + 10;
 
                   bubbleToTextCollection.push({
                     source : {
@@ -729,14 +807,46 @@
                     },
                     target : {
                       id: "highlight-text",
-                      xOffset : $('#' + id + ' .highlighted-text').position().left,
-                      yOffset : $('#' + id + ' .highlighted-text').position().top
+                      xOffset : x2Loc,
+                      yOffset : y2Loc
                     }
                   });
 
                   connections2.push({ source: ele, target: $('#' + id) });
+                  
+                  $('#' + id).on('drag', function() {
+                    bubbleToTextCollection = [];
+                    connections2.forEach(conn => {
+                      const ele = conn.source;
 
-                  drawPolyLine(bubbleToTextCollection);
+                      let x1Loc = d3.select(ele.parentElement).attr('transform').split('(')[1];
+                      x1Loc = parseFloat(x1Loc.split(',')[0]);
+                      x1Loc = (x1Loc/2 - 90) + ($('.all-data-box').css('left') ? parseFloat($('.all-data-box').css('left').split('px')[0]) : 0);
+                      
+                      let y1Loc = d3.select(ele.parentElement).attr('transform').split(')')[0];
+                      y1Loc = parseFloat(y1Loc.split(',')[1]);
+                      y1Loc = (y1Loc/2 - 18) + ($('.all-data-box').css('top') ? parseFloat($('.all-data-box').css('top').split('px')[0]) : 0);
+
+                      let x2Loc = parseFloat(conn.target.css('left').split('px')[0]) + conn.target.find('.highlighted-text').position().left;
+                      let y2Loc = parseFloat(conn.target.css('top').split('px')[0]) + conn.target.find('.highlighted-text').position().top + 5;
+
+                      bubbleToTextCollection.push({
+                        source : {
+                          id: "bubble-map",
+                          xOffset : x1Loc,
+                          yOffset : y1Loc
+                        },
+                        target : {
+                          id: "highlight-text",
+                          xOffset : x2Loc,
+                          yOffset : y2Loc
+                        }
+                      });
+                    })
+                    drawPolyLine2(bubbleToTextCollection);
+                  });
+
+                  drawPolyLine2(bubbleToTextCollection);
                 });
 
                 return data.docId;
@@ -973,9 +1083,9 @@
             }
           })
           .zoomAbs(
-            0, // initial x position
-            0, // initial y position
-            3  // initial zoom 
+            100, // initial x position
+            230, // initial y position
+            2 // initial zoom 
           );
         });
 
