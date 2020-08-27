@@ -231,7 +231,7 @@
               .on("mouseup", mapClick);
           
               $('.bubblemap-box').on('drag', reDrawLines);
-              $('.all-data-box').on('drag', reDrawLines2);
+              $('.all-data-box').on('drag', reDrawLines);
 
         document.querySelector('.loading-text').style.display = 'none';  
       }
@@ -242,34 +242,64 @@
           connections.forEach(function(ele) {
             computeLineCoordinates(ele, personsCollection, 'person');
           });
-          drawPolyLine();
         }
 
         bubbleToTextCollection = [];
         connections2.forEach(conn => {
           const ele = conn.source;
-          let x1Loc = parseFloat($('.' + this.classList[0]).css('left').split('px')[0]) + ele.getBBox().x + ele.getBBox().width;
-          let y1Loc = parseFloat($('.' + this.classList[0]).css('top').split('px')[0]) + ele.getBBox().y + (ele.getBBox().height/2) + 37;
 
-          let x2Loc = parseFloat(conn.target.css('left').split('px')[0]) + conn.target.find('.highlighted-text').position().left;
-          let y2Loc = parseFloat(conn.target.css('top').split('px')[0]) + conn.target.find('.highlighted-text').position().top;
+          if(conn.boxElement === 'bubblemap-box') {
+            let x1Loc = parseFloat($('.' + conn.boxElement).css('left').split('px')[0]) + ele.getBBox().x + ele.getBBox().width;
+            let y1Loc = parseFloat($('.' + conn.boxElement).css('top').split('px')[0]) + ele.getBBox().y + (ele.getBBox().height/2) + 37;
 
-          bubbleToTextCollection.push({
-            source : {
-              id: "bubble-map",
-              xOffset : x1Loc,
-              yOffset : y1Loc
-            },
-            target : {
-              id: "highlight-text",
-              xOffset : x2Loc,
-              yOffset : y2Loc
-            }
-          });
+            let x2Loc = parseFloat(conn.target.css('left').split('px')[0]) + conn.target.find('.highlighted-text').position().left;
+            let y2Loc = parseFloat(conn.target.css('top').split('px')[0]) + conn.target.find('.highlighted-text').position().top;
+
+            bubbleToTextCollection.push({
+              source : {
+                id: "bubble-map",
+                xOffset : x1Loc,
+                yOffset : y1Loc
+              },
+              target : {
+                id: "highlight-text",
+                xOffset : x2Loc,
+                yOffset : y2Loc
+              }
+            });
+          } else {
+            let x1Loc = d3.select(ele.parentElement).attr('transform').split('(')[1];
+            x1Loc = parseFloat(x1Loc.split(',')[0]);
+            x1Loc = (x1Loc/2 - 90) + ($('.all-data-box').css('left') ? parseFloat($('.all-data-box').css('left').split('px')[0]) : 0);
+            
+            let y1Loc = d3.select(ele.parentElement).attr('transform').split(')')[0];
+            y1Loc = parseFloat(y1Loc.split(',')[1]);
+            y1Loc = (y1Loc/2 - 18) + ($('.all-data-box').css('top') ? parseFloat($('.all-data-box').css('top').split('px')[0]) : 0);
+
+            let x2Loc = parseFloat(conn.target.css('left').split('px')[0]) + conn.target.find('.highlighted-text').position().left;
+            let y2Loc = parseFloat(conn.target.css('top').split('px')[0]) + conn.target.find('.highlighted-text').position().top + 5;
+
+            bubbleToTextCollection.push({
+              source : {
+                id: "bubble-map",
+                xOffset : x1Loc,
+                yOffset : y1Loc
+              },
+              target : {
+                id: "highlight-text",
+                xOffset : x2Loc,
+                yOffset : y2Loc
+              }
+            });
+          }
         });
 
         if(bubbleToTextCollection.length > 0) {
           drawPolyLine2(bubbleToTextCollection);
+        }
+
+        if(lineDataCollection.length > 0) {
+          drawPolyLine(lineDataCollection);
         }
       }
 
@@ -380,7 +410,7 @@
                 }
               });
 
-              connections2.push({ source: ele, target: $('#' + id) });
+              connections2.push({ source: ele, target: $('#' + id), boxElement: 'bubblemap-box' });
 
               drawPolyLine2(bubbleToTextCollection);
 
@@ -518,7 +548,7 @@
         
       }
 
-      function drawPolyLine(collection = lineDataCollection) {
+      function drawPolyLine(collection = lineDataCollection, customClass = 'custom-1') {
         const linkUpdate = d3.select('#line-canvas').selectAll('.link-new')
           .data(collection)
 
@@ -533,13 +563,13 @@
           .style('fill', 'none').raise();
       }
 
-      function drawPolyLine2(collection) {
+      function drawPolyLine2(collection, customClass = 'custom-2') {
         const linkUpdate = d3.select('#line-canvas').selectAll('.link-new1')
           .data(collection)
 
           linkUpdate.enter()
           .append('path')
-              .attr('class', 'link-new1')
+              .attr('class', 'link-new1 ' + customClass)
               .merge(linkUpdate)
           .attr('d',lineFunc)
           .style('stroke', '#95c7f4')
@@ -733,7 +763,7 @@
         simulation.nodes(nodes).on("tick", ticked);
 
         simulation.force("link").links(links);
-        $('.all-data-box').on('drag', reDrawLines2);
+        $('.all-data-box').on('drag', reDrawLines);
       }
 
       function graphConnector() {
@@ -812,7 +842,7 @@
                     }
                   });
 
-                  connections2.push({ source: ele, target: $('#' + id) });
+                  connections2.push({ source: ele, target: $('#' + id), boxElement: 'all-data-box' });
                   
                   $('#' + id).on('drag', function() {
                     bubbleToTextCollection = [];
@@ -1049,17 +1079,28 @@
         });
 
         $(document).on('click','.note .close_note',function(event){
+          console.log($(this).parent());
+
+          if($(this).parent().hasClass('bubblemap-box') || $(this).parent().hasClass('all-data-box')) {
+            lineDataCollection = [];
+            connections = [];
+            
+            document.querySelectorAll('.link-new').forEach(ele => {
+              ele.remove();
+            });
+          } else {
+            bubbleToTextCollection = [];
+            connections2 = [];
+            document.querySelectorAll('.link-new1').forEach(ele => {
+              ele.remove();
+            });
+          }
+
           if($(this).parent().hasClass('custom-data')) {
             $(this).parent().hide();
           } else {
             $(this).parent().detach();
           }
-
-          lineDataCollection = [];
-          connections = [];
-          document.querySelectorAll('.link-new').forEach(ele => {
-            ele.remove();
-          });
         });
       
         document.querySelector('.matrix-button').addEventListener('click', function() {
